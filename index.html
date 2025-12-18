@@ -5,6 +5,9 @@
 <title>Pre-Operative Capture System</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
+<!-- PDF library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 <style>
 body {
   font-family: system-ui, sans-serif;
@@ -32,7 +35,6 @@ h1,h2 { margin-top:0; }
   width:0%;
   background:#22c55e;
   border-radius:7px;
-  transition:width .3s;
 }
 input { margin-top:1rem; }
 img {
@@ -67,6 +69,7 @@ button:disabled { background:#9ca3af; }
 
 <div class="card" id="card">
   <h1>Pre-Operative Capture System</h1>
+
   <p class="progress-text" id="status"></p>
   <div class="progress"><div id="bar"></div></div>
 
@@ -75,20 +78,33 @@ button:disabled { background:#9ca3af; }
 
   <input type="file" id="file" accept="image/*" />
   <img id="img" />
+
   <button id="next" disabled>Next Required Capture</button>
 </div>
 
 <script>
+const { jsPDF } = window.jspdf;
+
 const steps = [
-  ["I1 – Airway View","Mouth open, tongue protruded, upright."],
-  ["I2 – Upper Dentition","Frontal maxillary view."],
-  ["I3 – Lower Dentition","Frontal mandibular view."],
-  ["I4 – Right Molars","Right posterior teeth."],
-  ["I5 – Left Molars","Left posterior teeth."],
-  ["I6 – Natural Occlusion","Teeth in contact."]
+  "I1 – Airway View",
+  "I2 – Upper Dentition",
+  "I3 – Lower Dentition",
+  "I4 – Right Molars",
+  "I5 – Left Molars",
+  "I6 – Natural Occlusion"
+];
+
+const instructions = [
+  "Mouth open, tongue protruded, upright.",
+  "Frontal maxillary view.",
+  "Frontal mandibular view.",
+  "Right posterior teeth.",
+  "Left posterior teeth.",
+  "Teeth in contact."
 ];
 
 let i = 0;
+const images = [];
 
 const status = document.getElementById("status");
 const bar = document.getElementById("bar");
@@ -100,10 +116,10 @@ const next = document.getElementById("next");
 const card = document.getElementById("card");
 
 function loadStep() {
-  status.textContent = `Required Capture ${i+1} of ${steps.length}`;
-  bar.style.width = `${(i/steps.length)*100}%`;
-  title.textContent = steps[i][0];
-  desc.textContent = steps[i][1];
+  status.textContent = `Required Capture ${i+1} of 6`;
+  bar.style.width = `${(i/6)*100}%`;
+  title.textContent = steps[i];
+  desc.textContent = instructions[i];
   img.style.display = "none";
   next.disabled = true;
 }
@@ -113,6 +129,7 @@ file.onchange = () => {
   if (!f) return;
   const r = new FileReader();
   r.onload = e => {
+    images.push(e.target.result);
     img.src = e.target.result;
     img.style.display = "block";
     next.disabled = false;
@@ -122,7 +139,7 @@ file.onchange = () => {
 
 next.onclick = () => {
   i++;
-  if (i < steps.length) {
+  if (i < 6) {
     file.value = "";
     loadStep();
   } else {
@@ -145,19 +162,48 @@ function showCompletion() {
     </p>
 
     <div class="actions">
-      <button onclick="alert('Analysis module not yet implemented')">
+      <button onclick="alert('Analysis module coming next')">
         🧠 Proceed to Automated Analysis
       </button>
 
-      <button class="secondary" onclick="alert('PDF report module not yet implemented')">
+      <button class="secondary" onclick="generatePDF()">
         📄 Generate Capture Report (PDF)
       </button>
 
-      <button class="export" onclick="alert('Secure export module not yet implemented')">
+      <button class="export" onclick="alert('Secure export coming next')">
         🔁 Export / Secure Handoff
       </button>
     </div>
   `;
+}
+
+function generatePDF() {
+  const pdf = new jsPDF();
+  let y = 15;
+
+  pdf.setFontSize(16);
+  pdf.text("Pre-Operative Capture Report", 10, y);
+  y += 10;
+
+  pdf.setFontSize(10);
+  pdf.text(`Generated: ${new Date().toLocaleString()}`, 10, y);
+  y += 10;
+
+  steps.forEach((step, idx) => {
+    pdf.text(`${step} ✔`, 10, y);
+    y += 6;
+
+    if (images[idx]) {
+      pdf.addImage(images[idx], "JPEG", 10, y, 60, 45);
+      y += 50;
+      if (y > 250) {
+        pdf.addPage();
+        y = 15;
+      }
+    }
+  });
+
+  pdf.save("PreOp_Capture_Report.pdf");
 }
 
 loadStep();
