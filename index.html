@@ -1,144 +1,206 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<title>Pre-Op Dental & Airway Capture System</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
+<title>Pre-Operative Capture System</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
-  body {
-    font-family: system-ui, sans-serif;
-    background: #eef2f7;
-    padding: 2rem;
-  }
-  .card {
-    background: white;
-    max-width: 800px;
-    margin: auto;
-    padding: 2rem;
-    border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(0,0,0,.1);
-  }
-  h1, h2 { margin-top: 0; }
-  .progress {
-    font-size: .9rem;
-    color: #555;
-  }
-  .bar {
-    height: 12px;
-    background: #ddd;
-    border-radius: 6px;
-    margin: 1rem 0;
-  }
-  .fill {
-    height: 100%;
-    width: 0%;
-    background: #16a34a;
-    border-radius: 6px;
-    transition: width .3s;
-  }
-  input {
-    margin-top: 1rem;
-  }
-  img {
-    display: none;
-    margin-top: 1rem;
-    max-width: 100%;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-  }
-  button {
-    margin-top: 1.5rem;
-    padding: .75rem 1.5rem;
-    border: none;
-    border-radius: 8px;
-    background: #4f46e5;
-    color: white;
-    font-size: 1rem;
-    cursor: pointer;
-  }
-  button:disabled {
-    background: #aaa;
-    cursor: not-allowed;
-  }
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  background:#eef2f7;
+  padding:2rem;
+}
+.container {
+  background:white;
+  max-width:1100px;
+  margin:auto;
+  padding:2rem;
+  border-radius:12px;
+}
+.section {
+  margin-bottom:2.5rem;
+  border-bottom:1px solid #ddd;
+  padding-bottom:1.5rem;
+}
+.preview {
+  max-width:260px;
+  display:block;
+  margin:.5rem 0;
+  border:1px solid #ccc;
+}
+label { display:block; margin:.3rem 0; }
+button {
+  margin-top:2rem;
+  padding:1rem;
+  font-size:1rem;
+  border:none;
+  border-radius:8px;
+  background:#1f2937;
+  color:white;
+  cursor:pointer;
+}
+.meta {
+  font-size:.9rem;
+  color:#444;
+  margin-bottom:.5rem;
+}
+.note {
+  font-size:.85rem;
+  color:#555;
+  margin-top:1rem;
+}
 </style>
 </head>
 
 <body>
+<div class="container">
 
-<div class="card">
-  <h1>Pre-Operative Capture System</h1>
-  <p class="progress" id="progressText"></p>
+<h1>Pre-Operative Dental & Airway Capture System</h1>
 
-  <div class="bar">
-    <div class="fill" id="progressFill"></div>
-  </div>
+<!-- I1 -->
+<div class="section">
+<h2>I1 – Airway View</h2>
+<p class="meta"><strong>Capture:</strong> Mouth open, tongue protruded, patient upright</p>
+<p class="meta"><strong>Clinical Purpose:</strong> Mallampati classification, tongue obstruction</p>
 
-  <h2 id="title"></h2>
-  <p id="description"></p>
+<input type="file" accept="image/*" onchange="preview(this,'i1')">
+<img id="i1" class="preview">
 
-  <input type="file" accept="image/*" id="fileInput" />
-  <img id="preview" />
+<label><input type="checkbox" id="tongue"> Tongue obstruction noted</label>
 
-  <button id="nextBtn" disabled>Next Required Capture</button>
+<label>Mallampati Class</label>
+<select id="mallampati">
+  <option value="">Select</option>
+  <option value="1">Class I</option>
+  <option value="2">Class II</option>
+  <option value="3">Class III</option>
+  <option value="4">Class IV</option>
+</select>
+</div>
+
+<!-- I2 -->
+<div class="section">
+<h2>I2 – Upper Dentition</h2>
+<p class="meta"><strong>Capture:</strong> Frontal maxillary view with cheek retraction</p>
+<p class="meta"><strong>Clinical Purpose:</strong> Missing teeth, crowns, chips</p>
+
+<input type="file" accept="image/*" onchange="preview(this,'i2')">
+<img id="i2" class="preview">
+</div>
+
+<!-- I3 -->
+<div class="section">
+<h2>I3 – Lower Dentition</h2>
+<p class="meta"><strong>Capture:</strong> Frontal mandibular view with cheek retraction</p>
+<p class="meta"><strong>Clinical Purpose:</strong> Missing teeth, crowns, chips</p>
+
+<input type="file" accept="image/*" onchange="preview(this,'i3')">
+<img id="i3" class="preview">
+</div>
+
+<!-- I4 -->
+<div class="section">
+<h2>I4 – Right Molars</h2>
+<p class="meta"><strong>Capture:</strong> Right posterior dentition with cheek displacement</p>
+<p class="meta"><strong>Clinical Purpose:</strong> Posterior dental injury risk</p>
+
+<input type="file" accept="image/*" onchange="preview(this,'i4')">
+<img id="i4" class="preview">
+</div>
+
+<!-- I5 -->
+<div class="section">
+<h2>I5 – Left Molars</h2>
+<p class="meta"><strong>Capture:</strong> Left posterior dentition with cheek displacement</p>
+<p class="meta"><strong>Clinical Purpose:</strong> Posterior dental injury risk</p>
+
+<input type="file" accept="image/*" onchange="preview(this,'i5')">
+<img id="i5" class="preview">
+</div>
+
+<!-- Dentition Flags -->
+<div class="section">
+<h2>Dentition Findings</h2>
+<label><input type="checkbox" id="missing"> Missing teeth</label>
+<label><input type="checkbox" id="crowns"> Crowns / restorations</label>
+<label><input type="checkbox" id="chips"> Chips / fractures</label>
+</div>
+
+<!-- I6 -->
+<div class="section">
+<h2>I6 – Natural Occlusion</h2>
+<p class="meta"><strong>Capture:</strong> Frontal bite view with teeth in contact</p>
+<p class="meta"><strong>Clinical Purpose:</strong> Occlusal alignment, instability</p>
+
+<input type="file" accept="image/*" onchange="preview(this,'i6')">
+<img id="i6" class="preview">
+
+<label><input type="checkbox" id="occlusion"> Occlusal instability</label>
+</div>
+
+<button onclick="generatePDF()">Generate PDF Report</button>
+
+<p class="note">
+AI-assisted screening support tool. Clinical judgment required.
+</p>
+
 </div>
 
 <script>
-const steps = [
-  ["I1 Airway View","Mouth open, tongue protruded, patient upright."],
-  ["I2 Upper Dentition","Frontal view of maxillary teeth."],
-  ["I3 Lower Dentition","Frontal view of mandibular teeth."],
-  ["I4 Right Molars","Right posterior dentition."],
-  ["I5 Left Molars","Left posterior dentition."],
-  ["I6 Natural Occlusion","Teeth in contact, frontal bite view."]
-];
-
-let current = 0;
-const title = document.getElementById("title");
-const desc = document.getElementById("description");
-const progressText = document.getElementById("progressText");
-const progressFill = document.getElementById("progressFill");
-const fileInput = document.getElementById("fileInput");
-const preview = document.getElementById("preview");
-const nextBtn = document.getElementById("nextBtn");
-
-function loadStep() {
-  title.textContent = steps[current][0];
-  desc.textContent = steps[current][1];
-  progressText.textContent = `Required Capture ${current+1} of 6`;
-  progressFill.style.width = `${(current/6)*100}%`;
-  preview.style.display = "none";
-  nextBtn.disabled = true;
+function preview(input,id){
+  const img=document.getElementById(id);
+  img.src=URL.createObjectURL(input.files[0]);
 }
 
-fileInput.onchange = () => {
-  const file = fileInput.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    preview.src = e.target.result;
-    preview.style.display = "block";
-    nextBtn.disabled = false;
-  };
-  reader.readAsDataURL(file);
-};
+function generatePDF(){
+  const {jsPDF}=window.jspdf;
+  const pdf=new jsPDF();
 
-nextBtn.onclick = () => {
-  current++;
-  if (current < steps.length) {
-    loadStep();
-    fileInput.value = "";
-  } else {
-    progressFill.style.width = "100%";
-    title.textContent = "Capture Complete";
-    desc.textContent =
-      "All required images captured. System ready for on-device analysis and report generation.";
-    fileInput.style.display = "none";
-    nextBtn.style.display = "none";
-  }
-};
+  const mall=parseInt(document.getElementById("mallampati").value||0);
+  const tongue=document.getElementById("tongue").checked;
+  const missing=document.getElementById("missing").checked;
+  const crowns=document.getElementById("crowns").checked;
+  const chips=document.getElementById("chips").checked;
+  const occlusion=document.getElementById("occlusion").checked;
 
-loadStep();
+  let airwayScore=0;
+  let dentalScore=0;
+
+  if(mall>=3) airwayScore+=2;
+  if(tongue) airwayScore+=1;
+
+  if(missing) dentalScore+=1;
+  if(crowns) dentalScore+=1;
+  if(chips) dentalScore+=2;
+  if(occlusion) dentalScore+=2;
+
+  const airwayRisk=airwayScore>=3?"HIGH":airwayScore===2?"MODERATE":"LOW";
+  const dentalRisk=dentalScore>=4?"HIGH":dentalScore>=2?"MODERATE":"LOW";
+
+  pdf.setFontSize(15);
+  pdf.text("Pre-Operative Dental & Airway Report",10,15);
+
+  pdf.setFontSize(11);
+  pdf.text(`Mallampati Class: ${mall||"Not selected"}`,10,30);
+  pdf.text(`Tongue Obstruction: ${tongue?"Yes":"No"}`,10,38);
+  pdf.text(`Airway Risk: ${airwayRisk}`,10,46);
+
+  pdf.text("Dentition Findings:",10,60);
+  pdf.text(`Missing Teeth: ${missing?"Yes":"No"}`,12,68);
+  pdf.text(`Crowns/Restorations: ${crowns?"Yes":"No"}`,12,76);
+  pdf.text(`Chips/Fractures: ${chips?"Yes":"No"}`,12,84);
+  pdf.text(`Occlusal Instability: ${occlusion?"Yes":"No"}`,12,92);
+  pdf.text(`Dental Risk: ${dentalRisk}`,10,108);
+
+  pdf.text(
+    "Disclaimer: AI-assisted screening tool. Final clinical decisions rest with the provider.",
+    10,280
+  );
+
+  pdf.save("PreOp_Report.pdf");
+}
 </script>
 
 </body>
