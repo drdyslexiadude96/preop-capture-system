@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<title>Pre-Operative Capture & Analysis System</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
+<title>Pre-Operative Capture System</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
 body {
@@ -11,133 +13,155 @@ body {
   background:#eef2f7;
   padding:2rem;
 }
-.card {
+.container {
   background:white;
-  max-width:900px;
+  max-width:960px;
   margin:auto;
   padding:2rem;
   border-radius:12px;
 }
-h1 { margin-top:0; }
-.section { margin-top:2rem; }
+.section {
+  margin-bottom:2rem;
+  border-bottom:1px solid #ddd;
+  padding-bottom:1.5rem;
+}
+label { display:block; margin:.4rem 0; }
+input[type="file"] { margin:.5rem 0; }
 button {
+  margin-top:1.5rem;
   padding:1rem;
-  width:100%;
+  font-size:1rem;
   border:none;
   border-radius:8px;
-  font-size:1rem;
+  background:#1f2937;
+  color:white;
   cursor:pointer;
 }
-.primary { background:#4f46e5; color:white; }
-.secondary { background:#374151; color:white; }
-.success { background:#059669; color:white; }
-.locked { opacity:.6; pointer-events:none; }
-label { display:block; margin:.5rem 0; }
-select { padding:.4rem; font-size:1rem; }
+.note {
+  font-size:.85rem;
+  color:#555;
+  margin-top:1rem;
+}
+.preview {
+  margin-top:.5rem;
+  max-width:200px;
+  border:1px solid #ccc;
+}
 </style>
 </head>
 
 <body>
-<div class="card">
+<div class="container">
 
 <h1>Pre-Operative Capture System</h1>
 
-<!-- AIRWAY -->
+<!-- I1 AIRWAY -->
 <div class="section">
-<h2>I1 – Airway Assessment</h2>
+<h2>I1 – Airway View</h2>
+<input type="file" accept="image/*" onchange="preview(this, 'img1')">
+<img id="img1" class="preview">
 
-<label>
-<input type="checkbox" id="tongue">
- Tongue obstruction noted
-</label>
+<label><input type="checkbox" id="tongue"> Tongue obstruction noted</label>
 
 <label>Mallampati Class</label>
 <select id="mallampati">
-<option value="">Select</option>
-<option value="1">I</option>
-<option value="2">II</option>
-<option value="3">III</option>
-<option value="4">IV</option>
+  <option value="">Select</option>
+  <option value="1">Class I</option>
+  <option value="2">Class II</option>
+  <option value="3">Class III</option>
+  <option value="4">Class IV</option>
 </select>
 </div>
 
-<!-- DENTITION -->
+<!-- I2–I5 DENTITION -->
 <div class="section">
-<h2>I2–I5 – Dentition Findings</h2>
+<h2>I2–I5 – Dentition Images</h2>
+
+<input type="file" accept="image/*" onchange="preview(this,'img2')">
+<img id="img2" class="preview">
+
+<input type="file" accept="image/*" onchange="preview(this,'img3')">
+<img id="img3" class="preview">
+
+<input type="file" accept="image/*" onchange="preview(this,'img4')">
+<img id="img4" class="preview">
+
+<input type="file" accept="image/*" onchange="preview(this,'img5')">
+<img id="img5" class="preview">
 
 <label><input type="checkbox" id="missing"> Missing teeth</label>
 <label><input type="checkbox" id="crowns"> Crowns / restorations</label>
 <label><input type="checkbox" id="chips"> Chips / fractures</label>
 </div>
 
-<!-- OCCLUSION -->
+<!-- I6 OCCLUSION -->
 <div class="section">
 <h2>I6 – Natural Occlusion</h2>
-<label><input type="checkbox" id="malocclusion"> Occlusal instability</label>
+
+<input type="file" accept="image/*" onchange="preview(this,'img6')">
+<img id="img6" class="preview">
+
+<label><input type="checkbox" id="occlusion"> Occlusal instability</label>
 </div>
 
-<!-- ACTIONS -->
-<div class="section">
-<button class="primary" onclick="generateReport()">📄 Generate PDF Report</button>
-</div>
+<button onclick="generatePDF()">Generate PDF Report</button>
 
-<div id="status" class="section"></div>
+<p class="note">
+AI-assisted screening support tool. Final clinical judgment required.
+</p>
 
 </div>
 
 <script>
-function generateReport() {
+function preview(input, imgId) {
+  const img = document.getElementById(imgId);
+  img.src = URL.createObjectURL(input.files[0]);
+}
+
+function generatePDF() {
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF();
 
   const mall = document.getElementById("mallampati").value;
-  if (!mall) {
-    alert("Mallampati class required");
-    return;
-  }
+  const tongue = document.getElementById("tongue").checked;
+  const missing = document.getElementById("missing").checked;
+  const crowns = document.getElementById("crowns").checked;
+  const chips = document.getElementById("chips").checked;
+  const occlusion = document.getElementById("occlusion").checked;
 
   let airwayRisk = "Low";
-  if (mall == 2) airwayRisk = "Moderate";
-  if (mall == 3) airwayRisk = "High";
-  if (mall == 4) airwayRisk = "Very High";
+  let dentalRisk = "Low";
+  let airwayNotes = [];
+  let dentalNotes = [];
 
-  if (document.getElementById("tongue").checked && airwayRisk !== "Very High") {
-    airwayRisk += " (↑ due to tongue obstruction)";
+  if (mall >= 3) {
+    airwayRisk = "Elevated";
+    airwayNotes.push("Elevated Mallampati class");
   }
+  if (tongue) airwayNotes.push("Tongue obstruction observed");
 
-  let dentalRisk = [];
-  if (missing.checked) dentalRisk.push("Missing teeth");
-  if (crowns.checked) dentalRisk.push("Crowns/restorations");
-  if (chips.checked) dentalRisk.push("Chips/fractures");
-  if (malocclusion.checked) dentalRisk.push("Occlusal instability");
+  if (missing || chips || occlusion) dentalRisk = "Elevated";
+  if (missing) dentalNotes.push("Missing teeth");
+  if (crowns) dentalNotes.push("Crowns/restorations");
+  if (chips) dentalNotes.push("Chips/fractures");
+  if (occlusion) dentalNotes.push("Occlusal instability");
 
-  const text = `
-PRE-OPERATIVE CAPTURE REPORT
+  pdf.text("Pre-Operative Dental & Airway Assessment",10,15);
+  pdf.text(`Mallampati Class: ${mall || "Not selected"}`,10,30);
+  pdf.text(`Airway Risk: ${airwayRisk}`,10,38);
+  airwayNotes.forEach((n,i)=>pdf.text(`- ${n}`,12,46+i*8));
 
-AIRWAY
-Mallampati Class: ${mall}
-Tongue Obstruction: ${tongue.checked}
-Airway Risk Level: ${airwayRisk}
+  let y = 46 + airwayNotes.length*8 + 10;
+  pdf.text(`Dental Risk: ${dentalRisk}`,10,y);
+  dentalNotes.forEach((n,i)=>pdf.text(`- ${n}`,12,y+8+i*8));
 
-DENTAL FINDINGS
-${dentalRisk.length ? dentalRisk.join(", ") : "None noted"}
+  pdf.text(
+    "Disclaimer: AI-assisted screening; clinical judgment required.",
+    10,
+    280
+  );
 
-DISCLAIMER:
-Structured screening only. Clinical judgment required.
-`;
-
-  const blob = new Blob([text], {type:"application/pdf"});
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.download = "PreOp_Report.pdf";
-  link.click();
-
-  document.getElementById("status").innerHTML = `
-    <h3>✅ Report Generated</h3>
-    <p>Airway Risk: <strong>${airwayRisk}</strong></p>
-    <p>Dental Findings: ${dentalRisk.length ? dentalRisk.join(", ") : "None"}</p>
-    <p>Provider review complete.</p>
-  `;
-
-  document.querySelector(".card").classList.add("locked");
+  pdf.save("PreOp_Clinical_Report.pdf");
 }
 </script>
 
