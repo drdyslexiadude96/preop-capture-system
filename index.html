@@ -140,32 +140,71 @@ function preview(input,id){
   }
 }
 function yn(id){ return document.getElementById(id).checked ? "Yes" : "No"; }
-
 function generatePDF(){
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF();
-  let y=20;
+  let y = 20;
 
+  const mall = document.getElementById("mallampati").value;
+  const tongue = document.getElementById("tongue").checked;
+  const occlusion = document.getElementById("occlusion").checked;
+
+  // ---- RULES-BASED SCORING ----
+  let airwayScore = 0;
+  let dentalScore = 0;
+
+  // Airway rules
+  if (mall === "III" || mall === "IV") airwayScore += 2;
+  if (tongue) airwayScore += 1;
+
+  // Dentition rules
+  ["I2","I3","I4","I5"].forEach(i => {
+    if (document.getElementById(i+"_chips").checked) dentalScore += 2;
+    if (document.getElementById(i+"_crowns").checked) dentalScore += 1;
+    if (document.getElementById(i+"_missing").checked) dentalScore += 1;
+  });
+  if (occlusion) dentalScore += 1;
+
+  const airwayRisk =
+    airwayScore >= 3 ? "HIGH" :
+    airwayScore === 2 ? "MODERATE" : "LOW";
+
+  const dentalRisk =
+    dentalScore >= 5 ? "HIGH" :
+    dentalScore >= 3 ? "MODERATE" : "LOW";
+
+  // ---- PDF OUTPUT ----
   pdf.setFontSize(16);
-  pdf.text("Pre-Operative Dental & Airway Report",20,y); y+=15;
+  pdf.text("Pre-Operative Dental & Airway Report", 20, y); y += 14;
 
   pdf.setFontSize(12);
-  pdf.text(`Mallampati Class: ${document.getElementById("mallampati").value || "Not selected"}`,20,y); y+=7;
-  pdf.text(`Tongue Obstruction: ${yn("tongue")}`,20,y); y+=12;
+  pdf.text("Airway Assessment", 20, y); y += 8;
+  pdf.text(`Mallampati Class: ${mall || "Not selected"}`, 25, y); y += 6;
+  pdf.text(`Tongue Obstruction: ${tongue ? "Yes" : "No"}`, 25, y); y += 6;
 
-  ["I2","I3","I4","I5"].forEach(i=>{
-    pdf.text(`${i} Dentition Findings:`,20,y); y+=6;
-    pdf.text(`  Missing teeth: ${yn(i+"_missing")}`,25,y); y+=6;
-    pdf.text(`  Crowns/restorations: ${yn(i+"_crowns")}`,25,y); y+=6;
-    pdf.text(`  Chips/fractures: ${yn(i+"_chips")}`,25,y); y+=8;
+  pdf.text("Airway Risk Interpretation:", 25, y); y += 6;
+  pdf.text(`• Rule-based airway risk level: ${airwayRisk}`, 30, y); y += 10;
+
+  pdf.text("Dentition Findings (by image):", 20, y); y += 8;
+
+  ["I2","I3","I4","I5"].forEach(i => {
+    pdf.text(`${i}:`, 25, y); y += 6;
+    pdf.text(`• Missing teeth: ${document.getElementById(i+"_missing").checked ? "Yes" : "No"}`, 30, y); y += 5;
+    pdf.text(`• Crowns/restorations: ${document.getElementById(i+"_crowns").checked ? "Yes" : "No"}`, 30, y); y += 5;
+    pdf.text(`• Chips/fractures: ${document.getElementById(i+"_chips").checked ? "Yes" : "No"}`, 30, y); y += 6;
   });
 
-  pdf.text(`Occlusal Instability: ${yn("occlusion")}`,20,y); y+=12;
-  pdf.text("Disclaimer: AI-assisted screening; clinical judgment required.",20,y);
+  pdf.text(`Occlusal Instability: ${occlusion ? "Yes" : "No"}`, 25, y); y += 8;
 
-  pdf.save("PreOp_Dental_Airway_Report.pdf");
+  pdf.text("Dental Risk Interpretation:", 20, y); y += 6;
+  pdf.text(`• Rule-based dental injury risk level: ${dentalRisk}`, 25, y); y += 12;
+
+  pdf.setFontSize(10);
+  pdf.text(
+    "Disclaimer: AI-assisted screening support tool. Rule-based interpretation only. Final clinical judgment required.",
+    20,
+    280
+  );
+
+  pdf.save("PreOp_Dental_Airway_Report_Interpreted.pdf");
 }
-</script>
-
-</body>
-</html>
