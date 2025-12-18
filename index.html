@@ -1,54 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8" />
 <title>Pre-Operative Capture System</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
 <style>
 body {
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: system-ui, sans-serif;
   background:#eef2f7;
   padding:2rem;
 }
-
 .card {
   max-width:900px;
   margin:auto;
-  background:#ffffff;
+  background:#fff;
   padding:2.5rem;
   border-radius:14px;
   box-shadow:0 12px 40px rgba(0,0,0,.12);
 }
-
-h1, h2 {
-  margin-top:0;
-}
-
-.status-text {
-  font-size:0.95rem;
-  color:#555;
-}
-
-.progress-bar {
+h1,h2 { margin-top:0; }
+.progress-text { color:#555; font-size:.95rem; }
+.progress {
   height:14px;
   background:#ddd;
   border-radius:7px;
   margin:1rem 0 2rem;
 }
-
-.progress-fill {
+.progress > div {
   height:100%;
   width:0%;
   background:#22c55e;
   border-radius:7px;
-  transition:width .3s ease;
+  transition:width .3s;
 }
-
-input[type=file] {
-  margin-top:1rem;
-}
-
+input { margin-top:1rem; }
 img {
   display:none;
   margin-top:1rem;
@@ -56,45 +42,126 @@ img {
   border-radius:10px;
   border:1px solid #ccc;
 }
-
 button {
   margin-top:1.5rem;
   padding:.85rem 1.6rem;
   border:none;
   border-radius:10px;
   background:#4f46e5;
-  color:white;
+  color:#fff;
   font-size:1rem;
   cursor:pointer;
 }
-
-button.secondary {
-  background:#334155;
-}
-
-button.export {
-  background:#0f766e;
-}
-
-button:disabled {
-  background:#9ca3af;
-  cursor:not-allowed;
-}
-
+button:disabled { background:#9ca3af; }
 .actions button {
-  display:block;
   width:100%;
   margin:1rem 0;
   text-align:left;
 }
+.secondary { background:#334155; }
+.export { background:#0f766e; }
 </style>
 </head>
 
 <body>
 
-<div class="card" id="app">
+<div class="card" id="card">
   <h1>Pre-Operative Capture System</h1>
+  <p class="progress-text" id="status"></p>
+  <div class="progress"><div id="bar"></div></div>
 
-  <p class="status-text" id="progressText"></p>
-  <div class="progress-bar">
-    <div class="progress-fill"
+  <h2 id="title"></h2>
+  <p id="desc"></p>
+
+  <input type="file" id="file" accept="image/*" />
+  <img id="img" />
+  <button id="next" disabled>Next Required Capture</button>
+</div>
+
+<script>
+const steps = [
+  ["I1 – Airway View","Mouth open, tongue protruded, upright."],
+  ["I2 – Upper Dentition","Frontal maxillary view."],
+  ["I3 – Lower Dentition","Frontal mandibular view."],
+  ["I4 – Right Molars","Right posterior teeth."],
+  ["I5 – Left Molars","Left posterior teeth."],
+  ["I6 – Natural Occlusion","Teeth in contact."]
+];
+
+let i = 0;
+
+const status = document.getElementById("status");
+const bar = document.getElementById("bar");
+const title = document.getElementById("title");
+const desc = document.getElementById("desc");
+const file = document.getElementById("file");
+const img = document.getElementById("img");
+const next = document.getElementById("next");
+const card = document.getElementById("card");
+
+function loadStep() {
+  status.textContent = `Required Capture ${i+1} of ${steps.length}`;
+  bar.style.width = `${(i/steps.length)*100}%`;
+  title.textContent = steps[i][0];
+  desc.textContent = steps[i][1];
+  img.style.display = "none";
+  next.disabled = true;
+}
+
+file.onchange = () => {
+  const f = file.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = e => {
+    img.src = e.target.result;
+    img.style.display = "block";
+    next.disabled = false;
+  };
+  r.readAsDataURL(f);
+};
+
+next.onclick = () => {
+  i++;
+  if (i < steps.length) {
+    file.value = "";
+    loadStep();
+  } else {
+    showCompletion();
+  }
+};
+
+function showCompletion() {
+  card.innerHTML = `
+    <h1>Pre-Operative Capture System</h1>
+
+    <p class="progress-text">Required Capture 6 of 6</p>
+    <div class="progress"><div style="width:100%"></div></div>
+
+    <h2>Capture Complete</h2>
+
+    <p>
+      <strong>All required images captured.</strong><br><br>
+      <em>System is ready for analysis, report generation, or secure export.</em>
+    </p>
+
+    <div class="actions">
+      <button onclick="alert('Analysis module not yet implemented')">
+        🧠 Proceed to Automated Analysis
+      </button>
+
+      <button class="secondary" onclick="alert('PDF report module not yet implemented')">
+        📄 Generate Capture Report (PDF)
+      </button>
+
+      <button class="export" onclick="alert('Secure export module not yet implemented')">
+        🔁 Export / Secure Handoff
+      </button>
+    </div>
+  `;
+}
+
+loadStep();
+</script>
+
+</body>
+</html>
