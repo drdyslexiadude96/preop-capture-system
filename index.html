@@ -8,15 +8,13 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
-body { font-family: Arial, sans-serif; background:#f4f6f8; padding:20px; }
-.container { max-width:900px; margin:auto; background:#fff; padding:25px; border-radius:10px; }
-h1,h2,h3 { margin-top:25px; }
-.section { border-top:1px solid #ddd; padding-top:20px; margin-top:20px; }
-.preview { max-width:220px; margin-top:10px; display:block; border:1px solid #ccc; }
-.findings { margin-top:10px; padding:10px; background:#f9f9f9; border-radius:6px; }
-label { display:block; margin:4px 0; }
-button { padding:12px 18px; font-size:16px; margin-top:30px; cursor:pointer; }
-small { color:#666; }
+body{font-family:Arial;background:#f4f6f8;padding:20px}
+.container{max-width:900px;margin:auto;background:#fff;padding:25px;border-radius:10px}
+.section{border-top:1px solid #ddd;padding-top:20px;margin-top:20px}
+.preview{max-width:260px;margin-top:10px;border:1px solid #ccc}
+.findings{background:#f9f9f9;padding:10px;border-radius:6px;margin-top:10px}
+label{display:block;margin:4px 0}
+button{padding:12px 18px;font-size:16px;margin-top:30px}
 </style>
 </head>
 
@@ -25,11 +23,9 @@ small { color:#666; }
 
 <h1>Pre-Operative Dental & Airway Capture System</h1>
 
+<!-- AIRWAY -->
 <div class="section">
 <h2>I1 – Airway View</h2>
-<p><b>Capture:</b> Mouth open, tongue protruded, patient upright</p>
-<p><b>Clinical Purpose:</b> Mallampati classification, tongue obstruction</p>
-
 <input type="file" id="I1" accept="image/*" onchange="preview(this,'p1')">
 <img id="p1" class="preview">
 
@@ -38,118 +34,43 @@ small { color:#666; }
 <label>Mallampati Class
 <select id="mallampati">
 <option value="">Select</option>
-<option value="I">I</option>
-<option value="II">II</option>
-<option value="III">III</option>
-<option value="IV">IV</option>
+<option>I</option><option>II</option><option>III</option><option>IV</option>
 </select>
 </label>
 
 <div class="findings">
 <strong>Mallampati Rationale (Observed)</strong>
-<label><input type="checkbox" id="soft_palate"> Soft palate visible</label>
+<label><input type="checkbox" id="soft"> Soft palate visible</label>
 <label><input type="checkbox" id="uvula"> Uvula visible</label>
 <label><input type="checkbox" id="pillars"> Faucial pillars visible</label>
-<label><input type="checkbox" id="hard_palate"> Only hard palate visible</label>
+<label><input type="checkbox" id="hard"> Only hard palate visible</label>
 </div>
 </div>
 
+<!-- DENTITION -->
+<script>
+function dentitionBlock(id,title){
+document.write(`
 <div class="section">
-<h2>I2 – Upper Dentition</h2>
-<input type="file" id="I2" accept="image/*" onchange="preview(this,'p2')">
-<img id="p2" class="preview">
+<h2>${title}</h2>
+<input type="file" id="${id}" accept="image/*" onchange="preview(this,'p${id}')">
+<img id="p${id}" class="preview">
 <div class="findings">
-<label><input type="checkbox" id="I2_missing"> Missing teeth</label>
-<label><input type="checkbox" id="I2_crowns"> Crowns / restorations</label>
-<label><input type="checkbox" id="I2_chips"> Chips / fractures</label>
+<label><input type="checkbox" id="${id}_missing"> Missing teeth</label>
+<label><input type="checkbox" id="${id}_crowns"> Crowns/restorations</label>
+<label><input type="checkbox" id="${id}_chips"> Chips/fractures</label>
 </div>
-</div>
+</div>`);
+}
+dentitionBlock("I2","I2 – Upper Dentition");
+dentitionBlock("I3","I3 – Lower Dentition");
+dentitionBlock("I4","I4 – Right Molars");
+dentitionBlock("I5","I5 – Left Molars");
+</script>
 
-<div class="section">
-<h2>I3 – Lower Dentition</h2>
-<input type="file" id="I3" accept="image/*" onchange="preview(this,'p3')">
-<img id="p3" class="preview">
-<div class="findings">
-<label><input type="checkbox" id="I3_missing"> Missing teeth</label>
-<label><input type="checkbox" id="I3_crowns"> Crowns / restorations</label>
-<label><input type="checkbox" id="I3_chips"> Chips / fractures</label>
-</div>
-</div>
-
-<div class="section">
-<h2>I4 – Right Molars</h2>
-<input type="file" id="I4" accept="image/*" onchange="preview(this,'p4')">
-<img id="p4" class="preview">
-<div class="findings">
-<label><input type="checkbox" id="I4_missing"> Missing teeth</label>
-<label><input type="checkbox" id="I4_crowns"> Crowns / restorations</label>
-<label><input type="checkbox" id="I4_chips"> Chips / fractures</label>
-</div>
-</div>
-
-<div class="section">
-<h2>I5 – Left Molars</h2>
-<input type="file" id="I5" accept="image/*" onchange="preview(this,'p5')">
-<img id="p5" class="preview">
-<div class="findings">
-<label><input type="checkbox" id="I5_missing"> Missing teeth</label>
-<label><input type="checkbox" id="I5_crowns"> Crowns / restorations</label>
-<label><input type="checkbox" id="I5_chips"> Chips / fractures</label>
-</div>
-</div>
-
+<!-- OCCLUSION -->
 <div class="section">
 <h2>I6 – Natural Occlusion</h2>
 <input type="file" id="I6" accept="image/*" onchange="preview(this,'p6')">
 <img id="p6" class="preview">
-<label><input type="checkbox" id="occlusion"> Occlusal instability</label>
-</div>
-
-<button onclick="generatePDF()">Generate PDF Report</button>
-<p><small>AI-assisted screening support tool. Clinical judgment required.</small></p>
-
-</div>
-
-<script>
-function preview(input,id){
-  if(input.files[0]){
-    document.getElementById(id).src = URL.createObjectURL(input.files[0]);
-  }
-}
-
-function yn(id){
-  return document.getElementById(id)?.checked ? "Yes" : "No";
-}
-
-async function fileToImage(file){
-  return new Promise(resolve=>{
-    const r=new FileReader();
-    r.onload=e=>{
-      const img=new Image();
-      img.onload=()=>resolve(img);
-      img.src=e.target.result;
-    };
-    r.readAsDataURL(file);
-  });
-}
-
-async function generatePDF(){
-  const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF();
-  let y=20;
-
-  const addPage=(h=40)=>{
-    if(y+h>280){ pdf.addPage(); y=20; }
-  };
-
-  pdf.setFontSize(16);
-  pdf.text("Pre-Operative Dental & Airway Report (Interpreted)",20,y); y+=12;
-
-  pdf.setFontSize(13);
-  pdf.text("Airway Assessment",20,y); y+=8;
-
-  const mall=document.getElementById("mallampati").value||"Not selected";
-  const tongue=yn("tongue");
-
-  pdf.setFontSize(11);
-  pdf.text(`Mallamp
+<label><input type="
