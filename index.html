@@ -2,19 +2,29 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Pre-Operative Dental & Airway Capture System</title>
+<title>Pre-Op Capture Test</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
-body{font-family:Arial;background:#f4f6f8;padding:20px}
-.container{max-width:900px;margin:auto;background:#fff;padding:25px;border-radius:10px}
-.section{border-top:1px solid #ddd;padding-top:20px;margin-top:20px}
-.preview{max-width:260px;margin-top:10px;border:1px solid #ccc}
-.findings{background:#f9f9f9;padding:10px;border-radius:6px;margin-top:10px}
-label{display:block;margin:4px 0}
-button{padding:14px 20px;font-size:16px;margin-top:30px}
+body {
+  font-family: Arial, sans-serif;
+  background: #f4f6f8;
+  padding: 20px;
+}
+.container {
+  max-width: 800px;
+  margin: auto;
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+}
+button {
+  padding: 14px 20px;
+  font-size: 16px;
+  margin-top: 30px;
+}
 </style>
 </head>
 
@@ -23,93 +33,63 @@ button{padding:14px 20px;font-size:16px;margin-top:30px}
 
 <h1>Pre-Operative Dental & Airway Capture System</h1>
 
-<!-- I1 AIRWAY -->
-<div class="section">
-<h2>I1 – Airway View</h2>
-<input type="file" id="I1" accept="image/*" onchange="preview(this,'p1')">
-<img id="p1" class="preview">
+<p>This is a HARD RESET sanity check.</p>
 
-<label><input type="checkbox" id="tongue"> Tongue obstruction noted</label>
-
-<label>Mallampati Class
+<label>
+Mallampati Class:
 <select id="mallampati">
-<option value="">Select</option>
-<option>I</option><option>II</option><option>III</option><option>IV</option>
+  <option value="">Select</option>
+  <option>I</option>
+  <option>II</option>
+  <option>III</option>
+  <option>IV</option>
 </select>
 </label>
 
-<div class="findings">
-<strong>Mallampati Rationale</strong>
-<label><input type="checkbox" id="soft"> Soft palate visible</label>
-<label><input type="checkbox" id="uvula"> Uvula visible</label>
-<label><input type="checkbox" id="pillars"> Faucial pillars visible</label>
-<label><input type="checkbox" id="hard"> Only hard palate visible</label>
-</div>
-</div>
+<br><br>
 
-<!-- DENTITION -->
-<div id="dentition"></div>
+<label>
+<input type="checkbox" id="tongue"> Tongue obstruction noted
+</label>
 
-<!-- I6 OCCLUSION -->
-<div class="section">
-<h2>I6 – Natural Occlusion</h2>
-<input type="file" id="I6" accept="image/*" onchange="preview(this,'p6')">
-<img id="p6" class="preview">
-<label><input type="checkbox" id="occlusion"> Occlusal instability</label>
-</div>
+<br><br>
 
-<button onclick="generatePDF()">Generate PDF Report</button>
+<button id="generateBtn">Generate PDF Report</button>
 
 </div>
 
 <script>
-const dentitions = [
-  ["I2","Upper Dentition"],
-  ["I3","Lower Dentition"],
-  ["I4","Right Molars"],
-  ["I5","Left Molars"]
-];
+document.getElementById("generateBtn").onclick = generatePDF;
 
-const dentDiv = document.getElementById("dentition");
-dentitions.forEach((d,i)=>{
-  dentDiv.innerHTML += `
-  <div class="section">
-    <h2>${d[0]} – ${d[1]}</h2>
-    <input type="file" id="${d[0]}" accept="image/*" onchange="preview(this,'p${i+2}')">
-    <img id="p${i+2}" class="preview">
-    <div class="findings">
-      <label><input type="checkbox" id="${d[0]}_missing"> Missing teeth</label>
-      <label><input type="checkbox" id="${d[0]}_crowns"> Crowns/restorations</label>
-      <label><input type="checkbox" id="${d[0]}_chips"> Chips/fractures</label>
-    </div>
-  </div>`;
-});
-
-function preview(input,id){
-  if(input.files[0]){
-    document.getElementById(id).src = URL.createObjectURL(input.files[0]);
-  }
-}
-function yn(id){ return document.getElementById(id).checked ? "Yes" : "No"; }
-
-async function loadImage(imgEl){
-  if(!imgEl.src) return null;
-  const img = new Image();
-  img.src = imgEl.src;
-  await img.decode();
-  return img;
-}
-
-async function generatePDF(){
+function generatePDF() {
   const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF("p","mm","a4");
-  let y = 20;
-
-  const addPage = h => { if(y+h>280){ pdf.addPage(); y=20; } };
+  const pdf = new jsPDF();
 
   pdf.setFontSize(16);
-  pdf.text("Pre-Operative Dental & Airway Report (Interpreted)",20,y); y+=12;
+  pdf.text("Pre-Operative Dental & Airway Report", 20, 20);
 
   pdf.setFontSize(12);
-  const mall = mallampati.value;
-  pdf.text(`Mallampati Class: ${
+  pdf.text(
+    "Mallampati Class: " + document.getElementById("mallampati").value,
+    20,
+    35
+  );
+  pdf.text(
+    "Tongue Obstruction: " +
+      (document.getElementById("tongue").checked ? "Yes" : "No"),
+    20,
+    45
+  );
+
+  pdf.text(
+    "Disclaimer: AI-assisted screening; clinical judgment required.",
+    20,
+    60
+  );
+
+  pdf.save("TEST_PreOp_Report.pdf");
+}
+</script>
+
+</body>
+</html>
