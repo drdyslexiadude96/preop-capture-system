@@ -11,16 +11,24 @@ body {
   background:#eef2f7;
   padding:2rem;
 }
+
 .card {
   max-width:900px;
   margin:auto;
-  background:#fff;
+  background:#ffffff;
   padding:2.5rem;
   border-radius:14px;
   box-shadow:0 12px 40px rgba(0,0,0,.12);
 }
-h1,h2 { margin-top:0; }
-.progress-text { font-size:.95rem; color:#555; }
+
+h1, h2 {
+  margin-top:0;
+}
+
+.status-text {
+  font-size:0.95rem;
+  color:#555;
+}
 
 .progress-bar {
   height:14px;
@@ -28,6 +36,7 @@ h1,h2 { margin-top:0; }
   border-radius:7px;
   margin:1rem 0 2rem;
 }
+
 .progress-fill {
   height:100%;
   width:0%;
@@ -58,12 +67,15 @@ button {
   font-size:1rem;
   cursor:pointer;
 }
+
 button.secondary {
   background:#334155;
 }
+
 button.export {
   background:#0f766e;
 }
+
 button:disabled {
   background:#9ca3af;
   cursor:not-allowed;
@@ -83,151 +95,6 @@ button:disabled {
 <div class="card" id="app">
   <h1>Pre-Operative Capture System</h1>
 
-  <p class="progress-text" id="progressText"></p>
+  <p class="status-text" id="progressText"></p>
   <div class="progress-bar">
-    <div class="progress-fill" id="progressFill"></div>
-  </div>
-
-  <h2 id="stepTitle"></h2>
-  <p id="stepDescription"></p>
-
-  <input type="file" accept="image/*" id="fileInput">
-  <img id="preview">
-
-  <button id="nextBtn" disabled>Next Required Capture</button>
-</div>
-
-<script>
-/* ---------------------------
-   CAPTURE DEFINITIONS
----------------------------- */
-const steps = [
-  ["I1 – Airway View","Mouth open, tongue protruded, patient upright."],
-  ["I2 – Upper Dentition","Frontal view of maxillary teeth."],
-  ["I3 – Lower Dentition","Frontal view of mandibular teeth."],
-  ["I4 – Right Molars","Right posterior dentition."],
-  ["I5 – Left Molars","Left posterior dentition."],
-  ["I6 – Natural Occlusion","Teeth in contact, frontal bite view."]
-];
-
-let index = 0;
-
-/* ---------------------------
-   ELEMENT REFERENCES
----------------------------- */
-const titleEl = document.getElementById("stepTitle");
-const descEl  = document.getElementById("stepDescription");
-const progTxt = document.getElementById("progressText");
-const progFill= document.getElementById("progressFill");
-const fileInp = document.getElementById("fileInput");
-const preview = document.getElementById("preview");
-const nextBtn = document.getElementById("nextBtn");
-const app     = document.getElementById("app");
-
-/* ---------------------------
-   LOAD STEP
----------------------------- */
-function loadStep() {
-  titleEl.textContent = steps[index][0];
-  descEl.textContent  = steps[index][1];
-  progTxt.textContent = `Required Capture ${index + 1} of ${steps.length}`;
-  progFill.style.width = `${(index / steps.length) * 100}%`;
-
-  preview.style.display = "none";
-  nextBtn.disabled = true;
-}
-
-/* ---------------------------
-   FILE HANDLING
----------------------------- */
-fileInp.onchange = () => {
-  const file = fileInp.files[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-  reader.onload = e => {
-    preview.src = e.target.result;
-    preview.style.display = "block";
-    nextBtn.disabled = false;
-  };
-  reader.readAsDataURL(file);
-};
-
-/* ---------------------------
-   NEXT STEP / COMPLETE
----------------------------- */
-nextBtn.onclick = () => {
-  index++;
-
-  if (index < steps.length) {
-    fileInp.value = "";
-    loadStep();
-  } else {
-    showPostCaptureHub();
-  }
-};
-
-/* ---------------------------
-   POST-CAPTURE HUB (A+B+C)
----------------------------- */
-function showPostCaptureHub() {
-  progFill.style.width = "100%";
-  progTxt.textContent = "Required Capture 6 of 6";
-
-  titleEl.textContent = "Capture Complete";
-  descEl.innerHTML = `
-    <strong>All required images captured.</strong><br><br>
-    Select the next action:
-  `;
-
-  fileInp.style.display = "none";
-  preview.style.display = "none";
-  nextBtn.style.display = "none";
-
-  const actions = document.createElement("div");
-  actions.className = "actions";
-
-  actions.innerHTML = `
-    <button onclick="runAnalysis()">🧠 Proceed to Automated Analysis</button>
-    <button class="secondary" onclick="generateReport()">📄 Generate Capture Report (PDF)</button>
-    <button class="export" onclick="exportData()">🔁 Export / Secure Handoff</button>
-  `;
-
-  app.appendChild(actions);
-}
-
-/* ---------------------------
-   PLACEHOLDER ACTIONS
----------------------------- */
-function runAnalysis() {
-  alert(
-    "ANALYSIS MODULE\n\n" +
-    "This step will evaluate airway risk, dentition anomalies, and clinical flags.\n\n" +
-    "Module not yet implemented."
-  );
-}
-
-function generateReport() {
-  alert(
-    "REPORT GENERATION\n\n" +
-    "This step will compile images, timestamps, and capture checklist into a PDF.\n\n" +
-    "Module not yet implemented."
-  );
-}
-
-function exportData() {
-  alert(
-    "SECURE EXPORT / HANDOFF\n\n" +
-    "This step will package images and metadata for EHR or secure transfer.\n\n" +
-    "Module not yet implemented."
-  );
-}
-
-/* ---------------------------
-   INIT
----------------------------- */
-loadStep();
-</script>
-
-</body>
-</html>
+    <div class="progress-fill"
