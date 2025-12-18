@@ -5,12 +5,9 @@
 <title>Pre-Operative Capture System</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<!-- PDF library -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
 <style>
 body {
-  font-family: system-ui, sans-serif;
+  font-family: system-ui, -apple-system, sans-serif;
   background:#eef2f7;
   padding:2rem;
 }
@@ -22,7 +19,7 @@ body {
   border-radius:14px;
   box-shadow:0 12px 40px rgba(0,0,0,.12);
 }
-h1,h2 { margin-top:0; }
+h1,h2,h3 { margin-top:0; }
 .progress-text { color:#555; font-size:.95rem; }
 .progress {
   height:14px;
@@ -32,13 +29,11 @@ h1,h2 { margin-top:0; }
 }
 .progress > div {
   height:100%;
-  width:0%;
   background:#22c55e;
   border-radius:7px;
 }
 input { margin-top:1rem; }
 img {
-  display:none;
   margin-top:1rem;
   max-width:100%;
   border-radius:10px;
@@ -46,7 +41,7 @@ img {
 }
 button {
   margin-top:1.5rem;
-  padding:.85rem 1.6rem;
+  padding:.9rem 1.6rem;
   border:none;
   border-radius:10px;
   background:#4f46e5;
@@ -54,37 +49,27 @@ button {
   font-size:1rem;
   cursor:pointer;
 }
+button.secondary { background:#334155; }
+button.export { background:#0f766e; }
 button:disabled { background:#9ca3af; }
-.actions button {
-  width:100%;
-  margin:1rem 0;
-  text-align:left;
+.analysis-box {
+  border:1px solid #ddd;
+  border-radius:10px;
+  padding:1rem;
+  margin-top:1.5rem;
 }
-.secondary { background:#334155; }
-.export { background:#0f766e; }
+label {
+  display:block;
+  margin:.5rem 0;
+}
 </style>
 </head>
 
 <body>
 
-<div class="card" id="card">
-  <h1>Pre-Operative Capture System</h1>
-
-  <p class="progress-text" id="status"></p>
-  <div class="progress"><div id="bar"></div></div>
-
-  <h2 id="title"></h2>
-  <p id="desc"></p>
-
-  <input type="file" id="file" accept="image/*" />
-  <img id="img" />
-
-  <button id="next" disabled>Next Required Capture</button>
-</div>
+<div class="card" id="app"></div>
 
 <script>
-const { jsPDF } = window.jspdf;
-
 const steps = [
   "I1 – Airway View",
   "I2 – Upper Dentition",
@@ -103,52 +88,52 @@ const instructions = [
   "Teeth in contact."
 ];
 
-let i = 0;
-const images = [];
+let current = 0;
+let images = [];
 
-const status = document.getElementById("status");
-const bar = document.getElementById("bar");
-const title = document.getElementById("title");
-const desc = document.getElementById("desc");
-const file = document.getElementById("file");
-const img = document.getElementById("img");
-const next = document.getElementById("next");
-const card = document.getElementById("card");
+const app = document.getElementById("app");
 
-function loadStep() {
-  status.textContent = `Required Capture ${i+1} of 6`;
-  bar.style.width = `${(i/6)*100}%`;
-  title.textContent = steps[i];
-  desc.textContent = instructions[i];
-  img.style.display = "none";
-  next.disabled = true;
+function renderCapture() {
+  app.innerHTML = `
+    <h1>Pre-Operative Capture System</h1>
+    <p class="progress-text">Required Capture ${current+1} of 6</p>
+    <div class="progress"><div style="width:${(current/6)*100}%"></div></div>
+
+    <h2>${steps[current]}</h2>
+    <p>${instructions[current]}</p>
+
+    <input type="file" id="file" accept="image/*" />
+    <img id="preview" style="display:none;" />
+
+    <button id="next" disabled>Next Required Capture</button>
+  `;
+
+  const file = document.getElementById("file");
+  const preview = document.getElementById("preview");
+  const next = document.getElementById("next");
+
+  file.onchange = () => {
+    const f = file.files[0];
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = e => {
+      images.push(e.target.result);
+      preview.src = e.target.result;
+      preview.style.display = "block";
+      next.disabled = false;
+    };
+    r.readAsDataURL(f);
+  };
+
+  next.onclick = () => {
+    current++;
+    if (current < 6) renderCapture();
+    else renderComplete();
+  };
 }
 
-file.onchange = () => {
-  const f = file.files[0];
-  if (!f) return;
-  const r = new FileReader();
-  r.onload = e => {
-    images.push(e.target.result);
-    img.src = e.target.result;
-    img.style.display = "block";
-    next.disabled = false;
-  };
-  r.readAsDataURL(f);
-};
-
-next.onclick = () => {
-  i++;
-  if (i < 6) {
-    file.value = "";
-    loadStep();
-  } else {
-    showCompletion();
-  }
-};
-
-function showCompletion() {
-  card.innerHTML = `
+function renderComplete() {
+  app.innerHTML = `
     <h1>Pre-Operative Capture System</h1>
 
     <p class="progress-text">Required Capture 6 of 6</p>
@@ -158,55 +143,53 @@ function showCompletion() {
 
     <p>
       <strong>All required images captured.</strong><br><br>
-      <em>System is ready for analysis, report generation, or secure export.</em>
+      <em>System is ready for analysis, documentation, or secure export.</em>
     </p>
 
-    <div class="actions">
-      <button onclick="alert('Analysis module coming next')">
-        🧠 Proceed to Automated Analysis
-      </button>
-
-      <button class="secondary" onclick="generatePDF()">
-        📄 Generate Capture Report (PDF)
-      </button>
-
-      <button class="export" onclick="alert('Secure export coming next')">
-        🔁 Export / Secure Handoff
-      </button>
-    </div>
+    <button onclick="renderAnalysis()">🧠 Proceed to Analysis</button>
   `;
 }
 
-function generatePDF() {
-  const pdf = new jsPDF();
-  let y = 15;
+function renderAnalysis() {
+  app.innerHTML = `
+    <h1>Capture Analysis</h1>
+    <p><em>Structured review – no AI, no diagnosis.</em></p>
 
-  pdf.setFontSize(16);
-  pdf.text("Pre-Operative Capture Report", 10, y);
-  y += 10;
+    ${images.map((img,i)=>`
+      <div class="analysis-box">
+        <h3>${steps[i]}</h3>
+        <img src="${img}" />
+        <label><input type="checkbox"> Image quality acceptable</label>
+        <label><input type="checkbox"> Orientation correct</label>
+        <label><input type="checkbox"> Anatomical region visible</label>
+        <label><input type="checkbox"> Potential concern noted</label>
+      </div>
+    `).join("")}
 
-  pdf.setFontSize(10);
-  pdf.text(`Generated: ${new Date().toLocaleString()}`, 10, y);
-  y += 10;
-
-  steps.forEach((step, idx) => {
-    pdf.text(`${step} ✔`, 10, y);
-    y += 6;
-
-    if (images[idx]) {
-      pdf.addImage(images[idx], "JPEG", 10, y, 60, 45);
-      y += 50;
-      if (y > 250) {
-        pdf.addPage();
-        y = 15;
-      }
-    }
-  });
-
-  pdf.save("PreOp_Capture_Report.pdf");
+    <button class="secondary" onclick="renderFinal()">Complete Analysis</button>
+  `;
 }
 
-loadStep();
+function renderFinal() {
+  app.innerHTML = `
+    <h1>Analysis Complete</h1>
+
+    <p>
+      <strong>Capture and analysis complete.</strong><br><br>
+      Images have been reviewed and annotated for downstream use.
+    </p>
+
+    <button class="secondary" onclick="alert('PDF generation is the next build step')">
+      📄 Generate Capture Report (PDF)
+    </button>
+
+    <button class="export" onclick="alert('Secure export is the next build step')">
+      🔁 Export / Secure Handoff
+    </button>
+  `;
+}
+
+renderCapture();
 </script>
 
 </body>
