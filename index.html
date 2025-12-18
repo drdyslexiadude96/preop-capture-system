@@ -25,7 +25,7 @@ small { color:#666; }
 
 <h1>Pre-Operative Dental & Airway Capture System</h1>
 
-<!-- ================= I1 AIRWAY ================= -->
+<!-- I1 AIRWAY -->
 <div class="section">
 <h2>I1 – Airway View</h2>
 <p><b>Capture:</b> Mouth open, tongue protruded, patient upright</p>
@@ -55,19 +55,19 @@ small { color:#666; }
 </div>
 </div>
 
-<!-- ================= DENTITION I2–I5 ================= -->
+<!-- DENTITION VIEWS -->
 <script>
 const dentitionViews = [
-  { id:"I2", title:"I2 – Upper Dentition", purpose:"Frontal maxillary view with cheek retraction" },
-  { id:"I3", title:"I3 – Lower Dentition", purpose:"Frontal mandibular view with cheek retraction" },
-  { id:"I4", title:"I4 – Right Molars", purpose:"Right posterior dentition with cheek displacement" },
-  { id:"I5", title:"I5 – Left Molars", purpose:"Left posterior dentition with cheek displacement" }
+  {id:"I2", title:"I2 – Upper Dentition"},
+  {id:"I3", title:"I3 – Lower Dentition"},
+  {id:"I4", title:"I4 – Right Molars"},
+  {id:"I5", title:"I5 – Left Molars"}
 ];
 </script>
 
-<div id="dentitionSections"></div>
+<div id="dentition"></div>
 
-<!-- ================= I6 OCCLUSION ================= -->
+<!-- I6 -->
 <div class="section">
 <h2>I6 – Natural Occlusion</h2>
 <p><b>Capture:</b> Frontal bite view with teeth in contact</p>
@@ -75,23 +75,105 @@ const dentitionViews = [
 
 <input type="file" id="I6" accept="image/*" onchange="preview(this,'p6')">
 <img id="p6" class="preview">
-
 <label><input type="checkbox" id="occlusion"> Occlusal instability</label>
 </div>
 
 <button onclick="generatePDF()">Generate PDF Report</button>
-
 <p><small>AI-assisted screening support tool. Clinical judgment required.</small></p>
 
 </div>
 
 <script>
+const dentDiv = document.getElementById("dentition");
+dentitionViews.forEach((v,i)=>{
+  dentDiv.innerHTML += `
+  <div class="section">
+    <h2>${v.title}</h2>
+    <input type="file" id="${v.id}" accept="image/*" onchange="preview(this,'p${i+2}')">
+    <img id="p${i+2}" class="preview">
+    <div class="findings">
+      <strong>Dentition Findings</strong>
+      <label><input type="checkbox" id="${v.id}_missing"> Missing teeth</label>
+      <label><input type="checkbox" id="${v.id}_crowns"> Crowns / restorations</label>
+      <label><input type="checkbox" id="${v.id}_chips"> Chips / fractures</label>
+    </div>
+  </div>`;
+});
+
 function preview(input,id){
   if(input.files[0]){
     document.getElementById(id).src = URL.createObjectURL(input.files[0]);
   }
 }
-
 function yn(id){ return document.getElementById(id)?.checked ? "Yes" : "No"; }
 
-dentitionViews.forEach(v=>{
+async function loadImage(id){
+  return new Promise(resolve=>{
+    const f = document.getElementById(id)?.files?.[0];
+    if(!f) return resolve(null);
+    const r = new FileReader();
+    r.onload = () => {
+      let fmt="JPEG";
+      if(r.result.startsWith("data:image/png")) fmt="PNG";
+      resolve({data:r.result, fmt});
+    };
+    r.readAsDataURL(f);
+  });
+}
+
+async function generatePDF(){
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF();
+  let y=20;
+
+  pdf.setFontSize(16);
+  pdf.text("Pre-Operative Dental & Airway Report (Interpreted)",20,y); y+=15;
+
+  pdf.setFontSize(13);
+  pdf.text("Airway Assessment",20,y); y+=10;
+  pdf.setFontSize(12);
+  pdf.text(`Mallampati Class: ${document.getElementById("mallampati").value||"Not selected"}`,20,y); y+=6;
+  pdf.text(`Tongue Obstruction: ${yn("tongue")}`,20,y); y+=10;
+
+  const airwayImg = await loadImage("I1");
+  if(airwayImg){
+    pdf.addImage(airwayImg.data, airwayImg.fmt, 20, y, 60, 60);
+    y+=70;
+  }
+
+  pdf.text("Mallampati Rationale (Observed):",20,y); y+=6;
+  ["soft_palate","uvula","pillars","hard_palate"].forEach(k=>{
+    pdf.text(`• ${k.replace("_"," ")}: ${yn(k)}`,25,y); y+=6;
+  });
+  y+=6;
+
+  pdf.setFontSize(13);
+  pdf.text("Dentition Findings by Image",20,y); y+=10;
+
+  for(const v of dentitionViews){
+    pdf.setFontSize(12);
+    pdf.text(v.title,20,y); y+=6;
+
+    const img = await loadImage(v.id);
+    if(img){
+      pdf.addImage(img.data, img.fmt, 20, y, 60, 60);
+      y+=65;
+    }
+
+    pdf.text(`• Missing teeth: ${yn(v.id+"_missing")}`,25,y); y+=6;
+    pdf.text(`• Crowns/restorations: ${yn(v.id+"_crowns")}`,25,y); y+=6;
+    pdf.text(`• Chips/fractures: ${yn(v.id+"_chips")}`,25,y); y+=10;
+
+    if(y>250){ pdf.addPage(); y=20; }
+  }
+
+  pdf.text(`Occlusal Instability: ${yn("occlusion")}`,20,y); y+=10;
+  pdf.setFontSize(10);
+  pdf.text("Disclaimer: AI-assisted screening support tool. Clinical judgment required.",20,y);
+
+  pdf.save("PreOp_Dental_Airway_Report.pdf");
+}
+</script>
+
+</body>
+</html>
