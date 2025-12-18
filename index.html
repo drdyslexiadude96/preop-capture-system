@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>Pre-Operative Capture System</title>
+<title>Pre-Operative Dental & Airway Capture System</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -18,9 +18,6 @@ body {
   margin:auto;
   border-radius:8px;
 }
-h1,h2,h3 {
-  margin-top:1.5rem;
-}
 .section {
   border-top:1px solid #ddd;
   padding-top:1.5rem;
@@ -33,7 +30,7 @@ h1,h2,h3 {
 }
 label {
   display:block;
-  margin:0.4rem 0;
+  margin:0.3rem 0;
 }
 button {
   margin-top:2rem;
@@ -41,17 +38,24 @@ button {
   font-size:1rem;
   cursor:pointer;
 }
+.meta {
+  font-size:0.9rem;
+  color:#444;
+}
 </style>
 </head>
 
 <body>
 <div class="card">
 
-<h1>Pre-Operative Capture System</h1>
+<h1>Pre-Operative Dental & Airway Capture System</h1>
 
 <!-- I1 -->
 <div class="section">
 <h2>I1 – Airway View</h2>
+<p class="meta"><strong>Capture:</strong> Mouth open, tongue protruded, patient upright</p>
+<p class="meta"><strong>Clinical Purpose:</strong> Mallampati classification, tongue obstruction</p>
+
 <input type="file" id="i1" accept="image/*" onchange="preview('i1')">
 <img id="i1_preview" class="preview">
 
@@ -68,38 +72,71 @@ button {
 </label>
 </div>
 
-<!-- I2–I5 -->
-<div class="section">
-<h2>I2–I5 – Dentition Images</h2>
+<!-- DENTITION TEMPLATE -->
+<script>
+function dentitionBlock(id) {
+  return `
+    <label><input type="checkbox" id="${id}_missing"> Missing teeth</label>
+    <label><input type="checkbox" id="${id}_crowns"> Crowns / restorations</label>
+    <label><input type="checkbox" id="${id}_chips"> Chips / fractures</label>
+  `;
+}
+</script>
 
-<label>I2 – Upper Dentition
+<!-- I2 -->
+<div class="section">
+<h2>I2 – Upper Dentition</h2>
+<p class="meta"><strong>Capture:</strong> Frontal maxillary view with cheek retraction</p>
+<p class="meta"><strong>Clinical Purpose:</strong> Missing teeth, crowns, chips</p>
+
 <input type="file" id="i2" accept="image/*" onchange="preview('i2')">
 <img id="i2_preview" class="preview">
-</label>
 
-<label>I3 – Lower Dentition
+<div id="i2_findings"></div>
+</div>
+
+<!-- I3 -->
+<div class="section">
+<h2>I3 – Lower Dentition</h2>
+<p class="meta"><strong>Capture:</strong> Frontal mandibular view with cheek retraction</p>
+<p class="meta"><strong>Clinical Purpose:</strong> Missing teeth, crowns, chips</p>
+
 <input type="file" id="i3" accept="image/*" onchange="preview('i3')">
 <img id="i3_preview" class="preview">
-</label>
 
-<label>I4 – Right Molars
+<div id="i3_findings"></div>
+</div>
+
+<!-- I4 -->
+<div class="section">
+<h2>I4 – Right Molars</h2>
+<p class="meta"><strong>Capture:</strong> Right posterior dentition with cheek displacement</p>
+<p class="meta"><strong>Clinical Purpose:</strong> Posterior dental injury risk</p>
+
 <input type="file" id="i4" accept="image/*" onchange="preview('i4')">
 <img id="i4_preview" class="preview">
-</label>
 
-<label>I5 – Left Molars
+<div id="i4_findings"></div>
+</div>
+
+<!-- I5 -->
+<div class="section">
+<h2>I5 – Left Molars</h2>
+<p class="meta"><strong>Capture:</strong> Left posterior dentition with cheek displacement</p>
+<p class="meta"><strong>Clinical Purpose:</strong> Posterior dental injury risk</p>
+
 <input type="file" id="i5" accept="image/*" onchange="preview('i5')">
 <img id="i5_preview" class="preview">
-</label>
 
-<label><input type="checkbox" id="missing"> Missing teeth</label>
-<label><input type="checkbox" id="crowns"> Crowns / restorations</label>
-<label><input type="checkbox" id="chips"> Chips / fractures</label>
+<div id="i5_findings"></div>
 </div>
 
 <!-- I6 -->
 <div class="section">
 <h2>I6 – Natural Occlusion</h2>
+<p class="meta"><strong>Capture:</strong> Frontal bite view with teeth in contact</p>
+<p class="meta"><strong>Clinical Purpose:</strong> Occlusal alignment, instability</p>
+
 <input type="file" id="i6" accept="image/*" onchange="preview('i6')">
 <img id="i6_preview" class="preview">
 
@@ -107,6 +144,8 @@ button {
 </div>
 
 <button onclick="generatePDF()">Generate PDF Report</button>
+
+<p class="meta">AI-assisted screening support tool. Clinical judgment required.</p>
 
 </div>
 
@@ -120,25 +159,27 @@ function preview(id) {
   reader.readAsDataURL(file);
 }
 
+["i2","i3","i4","i5"].forEach(id => {
+  document.getElementById(id + "_findings").innerHTML = dentitionBlock(id);
+});
+
 function generatePDF() {
   let text = `
 Pre-Operative Capture Report
 
-I1 – Airway View
+I1 – Airway
 Tongue obstruction: ${document.getElementById('tongue').checked}
-Mallampati Class: ${document.getElementById('mallampati').value}
+Mallampati: ${document.getElementById('mallampati').value}
 
-Dentition Findings
-Missing teeth: ${document.getElementById('missing').checked}
-Crowns/restorations: ${document.getElementById('crowns').checked}
-Chips/fractures: ${document.getElementById('chips').checked}
+Dentition Findings:
+I2 Missing: ${document.getElementById('i2_missing').checked}
+I3 Missing: ${document.getElementById('i3_missing').checked}
+I4 Missing: ${document.getElementById('i4_missing').checked}
+I5 Missing: ${document.getElementById('i5_missing').checked}
 
-I6 – Natural Occlusion
-Occlusal instability: ${document.getElementById('occlusion').checked}
+I6 Occlusal instability: ${document.getElementById('occlusion').checked}
 
-Disclaimer:
-AI-assisted screening not yet implemented.
-Clinical judgment required.
+Disclaimer: Clinical judgment required.
 `;
 
   const blob = new Blob([text], { type: "text/plain" });
