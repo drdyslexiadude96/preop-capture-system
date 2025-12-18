@@ -14,8 +14,8 @@ body {
   padding:2rem;
 }
 .container {
-  background:white;
-  max-width:960px;
+  background:#fff;
+  max-width:1000px;
   margin:auto;
   padding:2rem;
   border-radius:12px;
@@ -25,27 +25,28 @@ body {
   border-bottom:1px solid #ddd;
   padding-bottom:1.5rem;
 }
-label { display:block; margin:.4rem 0; }
+h1,h2,h3 { margin-bottom:.5rem; }
+label { display:block; margin:.3rem 0; }
 input[type="file"] { margin:.5rem 0; }
+.preview {
+  max-width:220px;
+  margin:.5rem 0;
+  border:1px solid #ccc;
+}
 button {
-  margin-top:1.5rem;
+  margin-top:2rem;
   padding:1rem;
   font-size:1rem;
   border:none;
   border-radius:8px;
   background:#1f2937;
-  color:white;
+  color:#fff;
   cursor:pointer;
 }
 .note {
   font-size:.85rem;
   color:#555;
   margin-top:1rem;
-}
-.preview {
-  margin-top:.5rem;
-  max-width:200px;
-  border:1px solid #ccc;
 }
 </style>
 </head>
@@ -57,9 +58,9 @@ button {
 
 <!-- I1 AIRWAY -->
 <div class="section">
-<h2>I1 – Airway View</h2>
-<input type="file" accept="image/*" onchange="preview(this, 'img1')">
-<img id="img1" class="preview">
+<h2>I1 – Airway Assessment</h2>
+<input type="file" accept="image/*" onchange="preview(this,'i1')">
+<img id="i1" class="preview">
 
 <label><input type="checkbox" id="tongue"> Tongue obstruction noted</label>
 
@@ -77,18 +78,19 @@ button {
 <div class="section">
 <h2>I2–I5 – Dentition Images</h2>
 
-<input type="file" accept="image/*" onchange="preview(this,'img2')">
-<img id="img2" class="preview">
+<input type="file" accept="image/*" onchange="preview(this,'i2')">
+<img id="i2" class="preview">
 
-<input type="file" accept="image/*" onchange="preview(this,'img3')">
-<img id="img3" class="preview">
+<input type="file" accept="image/*" onchange="preview(this,'i3')">
+<img id="i3" class="preview">
 
-<input type="file" accept="image/*" onchange="preview(this,'img4')">
-<img id="img4" class="preview">
+<input type="file" accept="image/*" onchange="preview(this,'i4')">
+<img id="i4" class="preview">
 
-<input type="file" accept="image/*" onchange="preview(this,'img5')">
-<img id="img5" class="preview">
+<input type="file" accept="image/*" onchange="preview(this,'i5')">
+<img id="i5" class="preview">
 
+<h3>Dentition Findings</h3>
 <label><input type="checkbox" id="missing"> Missing teeth</label>
 <label><input type="checkbox" id="crowns"> Crowns / restorations</label>
 <label><input type="checkbox" id="chips"> Chips / fractures</label>
@@ -97,9 +99,8 @@ button {
 <!-- I6 OCCLUSION -->
 <div class="section">
 <h2>I6 – Natural Occlusion</h2>
-
-<input type="file" accept="image/*" onchange="preview(this,'img6')">
-<img id="img6" class="preview">
+<input type="file" accept="image/*" onchange="preview(this,'i6')">
+<img id="i6" class="preview">
 
 <label><input type="checkbox" id="occlusion"> Occlusal instability</label>
 </div>
@@ -113,8 +114,8 @@ AI-assisted screening support tool. Final clinical judgment required.
 </div>
 
 <script>
-function preview(input, imgId) {
-  const img = document.getElementById(imgId);
+function preview(input, id) {
+  const img = document.getElementById(id);
   img.src = URL.createObjectURL(input.files[0]);
 }
 
@@ -122,41 +123,51 @@ function generatePDF() {
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF();
 
-  const mall = document.getElementById("mallampati").value;
+  const mall = parseInt(document.getElementById("mallampati").value || 0);
   const tongue = document.getElementById("tongue").checked;
   const missing = document.getElementById("missing").checked;
   const crowns = document.getElementById("crowns").checked;
   const chips = document.getElementById("chips").checked;
   const occlusion = document.getElementById("occlusion").checked;
 
-  let airwayRisk = "Low";
-  let dentalRisk = "Low";
-  let airwayNotes = [];
-  let dentalNotes = [];
+  // RULE-BASED SCORING
+  let airwayScore = 0;
+  let dentalScore = 0;
 
-  if (mall >= 3) {
-    airwayRisk = "Elevated";
-    airwayNotes.push("Elevated Mallampati class");
-  }
-  if (tongue) airwayNotes.push("Tongue obstruction observed");
+  if (mall >= 3) airwayScore += 2;
+  if (tongue) airwayScore += 1;
 
-  if (missing || chips || occlusion) dentalRisk = "Elevated";
-  if (missing) dentalNotes.push("Missing teeth");
-  if (crowns) dentalNotes.push("Crowns/restorations");
-  if (chips) dentalNotes.push("Chips/fractures");
-  if (occlusion) dentalNotes.push("Occlusal instability");
+  if (missing) dentalScore += 1;
+  if (crowns) dentalScore += 1;
+  if (chips) dentalScore += 2;
+  if (occlusion) dentalScore += 2;
 
+  const airwayRisk =
+    airwayScore >= 3 ? "HIGH" :
+    airwayScore === 2 ? "MODERATE" : "LOW";
+
+  const dentalRisk =
+    dentalScore >= 4 ? "HIGH" :
+    dentalScore >= 2 ? "MODERATE" : "LOW";
+
+  // PDF CONTENT
+  pdf.setFontSize(16);
   pdf.text("Pre-Operative Dental & Airway Assessment",10,15);
-  pdf.text(`Mallampati Class: ${mall || "Not selected"}`,10,30);
-  pdf.text(`Airway Risk: ${airwayRisk}`,10,38);
-  airwayNotes.forEach((n,i)=>pdf.text(`- ${n}`,12,46+i*8));
 
-  let y = 46 + airwayNotes.length*8 + 10;
-  pdf.text(`Dental Risk: ${dentalRisk}`,10,y);
-  dentalNotes.forEach((n,i)=>pdf.text(`- ${n}`,12,y+8+i*8));
+  pdf.setFontSize(11);
+  pdf.text(`Mallampati Class: ${mall || "Not selected"}`,10,30);
+  pdf.text(`Tongue Obstruction: ${tongue ? "Yes" : "No"}`,10,38);
+  pdf.text(`Airway Risk Score: ${airwayScore} (${airwayRisk})`,10,46);
+
+  pdf.text("Dentition Findings:",10,60);
+  pdf.text(`Missing Teeth: ${missing ? "Yes" : "No"}`,12,68);
+  pdf.text(`Crowns/Restorations: ${crowns ? "Yes" : "No"}`,12,76);
+  pdf.text(`Chips/Fractures: ${chips ? "Yes" : "No"}`,12,84);
+  pdf.text(`Occlusal Instability: ${occlusion ? "Yes" : "No"}`,12,92);
+  pdf.text(`Dental Risk Score: ${dentalScore} (${dentalRisk})`,10,108);
 
   pdf.text(
-    "Disclaimer: AI-assisted screening; clinical judgment required.",
+    "Disclaimer: AI-assisted screening tool. Clinical judgment required.",
     10,
     280
   );
