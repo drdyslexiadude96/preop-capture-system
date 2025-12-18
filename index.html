@@ -9,12 +9,13 @@
 
 <style>
 body { font-family: Arial, sans-serif; background:#f4f6f8; padding:20px; }
-.container { max-width:900px; margin:auto; background:white; padding:25px; border-radius:10px; }
+.container { max-width:900px; margin:auto; background:#fff; padding:25px; border-radius:10px; }
 h1,h2,h3 { margin-top:25px; }
 .section { border-top:1px solid #ddd; padding-top:20px; margin-top:20px; }
-.preview { max-width:200px; display:block; margin-top:10px; }
-label { display:block; margin:5px 0; }
-button { padding:12px 18px; font-size:16px; margin-top:25px; cursor:pointer; }
+.preview { max-width:220px; margin-top:10px; display:block; border:1px solid #ccc; }
+.findings { margin-top:10px; padding:10px; background:#f9f9f9; border-radius:6px; }
+label { display:block; margin:4px 0; }
+button { padding:12px 18px; font-size:16px; margin-top:30px; cursor:pointer; }
 small { color:#666; }
 </style>
 </head>
@@ -30,7 +31,7 @@ small { color:#666; }
 <p><b>Capture:</b> Mouth open, tongue protruded, patient upright</p>
 <p><b>Clinical Purpose:</b> Mallampati classification, tongue obstruction</p>
 
-<input type="file" id="I1" accept="image/*" onchange="previewImage(this,'p1')">
+<input type="file" id="I1" accept="image/*" onchange="preview(this,'p1')">
 <img id="p1" class="preview">
 
 <label><input type="checkbox" id="tongue"> Tongue obstruction noted</label>
@@ -38,63 +39,91 @@ small { color:#666; }
 <label>Mallampati Class
 <select id="mallampati">
 <option value="">Select</option>
-<option>I</option>
-<option>II</option>
-<option>III</option>
-<option>IV</option>
+<option value="I">I</option>
+<option value="II">II</option>
+<option value="III">III</option>
+<option value="IV">IV</option>
 </select>
 </label>
 </div>
 
-<!-- DENTITION IMAGES -->
+<!-- I2 -->
 <div class="section">
-<h2>I2–I5 – Dentition Images</h2>
+<h2>I2 – Upper Dentition</h2>
+<p><b>Capture:</b> Frontal maxillary view with cheek retraction</p>
+<p><b>Clinical Purpose:</b> Missing teeth, crowns, chips</p>
 
-<div>
-<h3>I2 – Upper Dentition</h3>
-<input type="file" id="I2" accept="image/*" onchange="previewImage(this,'p2')">
+<input type="file" id="I2" accept="image/*" onchange="preview(this,'p2')">
 <img id="p2" class="preview">
+
+<div class="findings">
+<strong>Dentition Findings</strong>
 <label><input type="checkbox" id="I2_missing"> Missing teeth</label>
 <label><input type="checkbox" id="I2_crowns"> Crowns / restorations</label>
 <label><input type="checkbox" id="I2_chips"> Chips / fractures</label>
 </div>
+</div>
 
-<div>
-<h3>I3 – Lower Dentition</h3>
-<input type="file" id="I3" accept="image/*" onchange="previewImage(this,'p3')">
+<!-- I3 -->
+<div class="section">
+<h2>I3 – Lower Dentition</h2>
+<p><b>Capture:</b> Frontal mandibular view with cheek retraction</p>
+<p><b>Clinical Purpose:</b> Missing teeth, crowns, chips</p>
+
+<input type="file" id="I3" accept="image/*" onchange="preview(this,'p3')">
 <img id="p3" class="preview">
+
+<div class="findings">
+<strong>Dentition Findings</strong>
 <label><input type="checkbox" id="I3_missing"> Missing teeth</label>
 <label><input type="checkbox" id="I3_crowns"> Crowns / restorations</label>
 <label><input type="checkbox" id="I3_chips"> Chips / fractures</label>
 </div>
+</div>
 
-<div>
-<h3>I4 – Right Molars</h3>
-<input type="file" id="I4" accept="image/*" onchange="previewImage(this,'p4')">
+<!-- I4 -->
+<div class="section">
+<h2>I4 – Right Molars</h2>
+<p><b>Capture:</b> Right posterior dentition with cheek displacement</p>
+<p><b>Clinical Purpose:</b> Posterior dental injury risk</p>
+
+<input type="file" id="I4" accept="image/*" onchange="preview(this,'p4')">
 <img id="p4" class="preview">
+
+<div class="findings">
+<strong>Dentition Findings</strong>
 <label><input type="checkbox" id="I4_missing"> Missing teeth</label>
 <label><input type="checkbox" id="I4_crowns"> Crowns / restorations</label>
 <label><input type="checkbox" id="I4_chips"> Chips / fractures</label>
 </div>
+</div>
 
-<div>
-<h3>I5 – Left Molars</h3>
-<input type="file" id="I5" accept="image/*" onchange="previewImage(this,'p5')">
+<!-- I5 -->
+<div class="section">
+<h2>I5 – Left Molars</h2>
+<p><b>Capture:</b> Left posterior dentition with cheek displacement</p>
+<p><b>Clinical Purpose:</b> Posterior dental injury risk</p>
+
+<input type="file" id="I5" accept="image/*" onchange="preview(this,'p5')">
 <img id="p5" class="preview">
+
+<div class="findings">
+<strong>Dentition Findings</strong>
 <label><input type="checkbox" id="I5_missing"> Missing teeth</label>
 <label><input type="checkbox" id="I5_crowns"> Crowns / restorations</label>
 <label><input type="checkbox" id="I5_chips"> Chips / fractures</label>
 </div>
 </div>
 
-<!-- OCCLUSION -->
+<!-- I6 -->
 <div class="section">
 <h2>I6 – Natural Occlusion</h2>
-<p><b>Capture:</b> Frontal bite view</p>
+<p><b>Capture:</b> Frontal bite view with teeth in contact</p>
 <p><b>Clinical Purpose:</b> Occlusal alignment, instability</p>
 
-<input type="file" id="I6" accept="image/*" onchange="previewImage(this,'p6')">
+<input type="file" id="I6" accept="image/*" onchange="preview(this,'p6')">
 <img id="p6" class="preview">
+
 <label><input type="checkbox" id="occlusion"> Occlusal instability</label>
 </div>
 
@@ -105,40 +134,36 @@ small { color:#666; }
 </div>
 
 <script>
-function previewImage(input, target) {
-  const file = input.files[0];
-  if (!file) return;
-  document.getElementById(target).src = URL.createObjectURL(file);
+function preview(input,id){
+  if(input.files[0]){
+    document.getElementById(id).src = URL.createObjectURL(input.files[0]);
+  }
 }
-
-function yesNo(id){ return document.getElementById(id).checked ? "Yes" : "No"; }
+function yn(id){ return document.getElementById(id).checked ? "Yes" : "No"; }
 
 function generatePDF(){
-const { jsPDF } = window.jspdf;
-const doc = new jsPDF();
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF();
+  let y=20;
 
-let y=20;
-doc.setFontSize(16);
-doc.text("Pre-Operative Dental & Airway Report",20,y); y+=15;
+  pdf.setFontSize(16);
+  pdf.text("Pre-Operative Dental & Airway Report",20,y); y+=15;
 
-doc.setFontSize(12);
-doc.text(`Mallampati Class: ${document.getElementById("mallampati").value||"Not selected"}`,20,y); y+=8;
-doc.text(`Tongue Obstruction: ${yesNo("tongue")}`,20,y); y+=12;
+  pdf.setFontSize(12);
+  pdf.text(`Mallampati Class: ${document.getElementById("mallampati").value || "Not selected"}`,20,y); y+=7;
+  pdf.text(`Tongue Obstruction: ${yn("tongue")}`,20,y); y+=12;
 
-doc.text("Dentition Findings:",20,y); y+=8;
+  ["I2","I3","I4","I5"].forEach(i=>{
+    pdf.text(`${i} Dentition Findings:`,20,y); y+=6;
+    pdf.text(`  Missing teeth: ${yn(i+"_missing")}`,25,y); y+=6;
+    pdf.text(`  Crowns/restorations: ${yn(i+"_crowns")}`,25,y); y+=6;
+    pdf.text(`  Chips/fractures: ${yn(i+"_chips")}`,25,y); y+=8;
+  });
 
-["I2","I3","I4","I5"].forEach(id=>{
-doc.text(`${id}:`,25,y); y+=6;
-doc.text(`  Missing teeth: ${yesNo(id+"_missing")}`,30,y); y+=6;
-doc.text(`  Crowns/restorations: ${yesNo(id+"_crowns")}`,30,y); y+=6;
-doc.text(`  Chips/fractures: ${yesNo(id+"_chips")}`,30,y); y+=8;
-});
+  pdf.text(`Occlusal Instability: ${yn("occlusion")}`,20,y); y+=12;
+  pdf.text("Disclaimer: AI-assisted screening; clinical judgment required.",20,y);
 
-doc.text(`Occlusal Instability: ${yesNo("occlusion")}`,20,y); y+=12;
-
-doc.text("Disclaimer: AI-assisted screening; clinical judgment required.",20,y);
-
-doc.save("PreOp_Dental_Airway_Report.pdf");
+  pdf.save("PreOp_Dental_Airway_Report.pdf");
 }
 </script>
 
