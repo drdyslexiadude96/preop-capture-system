@@ -14,7 +14,7 @@ body{font-family:Arial;background:#f4f6f8;padding:20px}
 .preview{max-width:260px;margin-top:10px;border:1px solid #ccc}
 .findings{background:#f9f9f9;padding:10px;border-radius:6px;margin-top:10px}
 label{display:block;margin:4px 0}
-button{padding:12px 18px;font-size:16px;margin-top:30px}
+button{padding:14px 20px;font-size:16px;margin-top:30px}
 </style>
 </head>
 
@@ -23,7 +23,7 @@ button{padding:12px 18px;font-size:16px;margin-top:30px}
 
 <h1>Pre-Operative Dental & Airway Capture System</h1>
 
-<!-- AIRWAY -->
+<!-- I1 AIRWAY -->
 <div class="section">
 <h2>I1 – Airway View</h2>
 <input type="file" id="I1" accept="image/*" onchange="preview(this,'p1')">
@@ -39,7 +39,7 @@ button{padding:12px 18px;font-size:16px;margin-top:30px}
 </label>
 
 <div class="findings">
-<strong>Mallampati Rationale (Observed)</strong>
+<strong>Mallampati Rationale</strong>
 <label><input type="checkbox" id="soft"> Soft palate visible</label>
 <label><input type="checkbox" id="uvula"> Uvula visible</label>
 <label><input type="checkbox" id="pillars"> Faucial pillars visible</label>
@@ -48,29 +48,68 @@ button{padding:12px 18px;font-size:16px;margin-top:30px}
 </div>
 
 <!-- DENTITION -->
-<script>
-function dentitionBlock(id,title){
-document.write(`
-<div class="section">
-<h2>${title}</h2>
-<input type="file" id="${id}" accept="image/*" onchange="preview(this,'p${id}')">
-<img id="p${id}" class="preview">
-<div class="findings">
-<label><input type="checkbox" id="${id}_missing"> Missing teeth</label>
-<label><input type="checkbox" id="${id}_crowns"> Crowns/restorations</label>
-<label><input type="checkbox" id="${id}_chips"> Chips/fractures</label>
-</div>
-</div>`);
-}
-dentitionBlock("I2","I2 – Upper Dentition");
-dentitionBlock("I3","I3 – Lower Dentition");
-dentitionBlock("I4","I4 – Right Molars");
-dentitionBlock("I5","I5 – Left Molars");
-</script>
+<div id="dentition"></div>
 
-<!-- OCCLUSION -->
+<!-- I6 OCCLUSION -->
 <div class="section">
 <h2>I6 – Natural Occlusion</h2>
 <input type="file" id="I6" accept="image/*" onchange="preview(this,'p6')">
 <img id="p6" class="preview">
-<label><input type="
+<label><input type="checkbox" id="occlusion"> Occlusal instability</label>
+</div>
+
+<button onclick="generatePDF()">Generate PDF Report</button>
+
+</div>
+
+<script>
+const dentitions = [
+  ["I2","Upper Dentition"],
+  ["I3","Lower Dentition"],
+  ["I4","Right Molars"],
+  ["I5","Left Molars"]
+];
+
+const dentDiv = document.getElementById("dentition");
+dentitions.forEach((d,i)=>{
+  dentDiv.innerHTML += `
+  <div class="section">
+    <h2>${d[0]} – ${d[1]}</h2>
+    <input type="file" id="${d[0]}" accept="image/*" onchange="preview(this,'p${i+2}')">
+    <img id="p${i+2}" class="preview">
+    <div class="findings">
+      <label><input type="checkbox" id="${d[0]}_missing"> Missing teeth</label>
+      <label><input type="checkbox" id="${d[0]}_crowns"> Crowns/restorations</label>
+      <label><input type="checkbox" id="${d[0]}_chips"> Chips/fractures</label>
+    </div>
+  </div>`;
+});
+
+function preview(input,id){
+  if(input.files[0]){
+    document.getElementById(id).src = URL.createObjectURL(input.files[0]);
+  }
+}
+function yn(id){ return document.getElementById(id).checked ? "Yes" : "No"; }
+
+async function loadImage(imgEl){
+  if(!imgEl.src) return null;
+  const img = new Image();
+  img.src = imgEl.src;
+  await img.decode();
+  return img;
+}
+
+async function generatePDF(){
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF("p","mm","a4");
+  let y = 20;
+
+  const addPage = h => { if(y+h>280){ pdf.addPage(); y=20; } };
+
+  pdf.setFontSize(16);
+  pdf.text("Pre-Operative Dental & Airway Report (Interpreted)",20,y); y+=12;
+
+  pdf.setFontSize(12);
+  const mall = mallampati.value;
+  pdf.text(`Mallampati Class: ${
