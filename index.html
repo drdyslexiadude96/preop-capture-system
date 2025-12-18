@@ -8,25 +8,27 @@
 
 <style>
 body { font-family: Arial, sans-serif; background:#f4f6f8; padding:20px; }
-.container { max-width:900px; margin:auto; background:#fff; padding:25px; border-radius:10px; }
+.container { max-width:1000px; margin:auto; background:#fff; padding:25px; border-radius:10px; }
 .section { border-top:1px solid #ddd; margin-top:25px; padding-top:20px; }
 .preview { max-width:220px; display:block; margin-top:10px; border:1px solid #ccc; }
 label { display:block; margin:6px 0; }
-button { padding:14px 20px; font-size:16px; margin-top:30px; cursor:pointer; }
+button { padding:14px 22px; font-size:16px; margin-top:30px; cursor:pointer; }
 </style>
 </head>
 
 <body>
 <div class="container">
+
 <h1>Pre-Operative Dental & Airway Capture System</h1>
 
-<!-- AIRWAY -->
+<!-- I1 AIRWAY -->
 <div class="section">
 <h2>I1 – Airway View</h2>
-<input type="file" id="airwayImage" accept="image/*"><br>
-<img id="airwayPreview" class="preview">
 
-<label><input type="checkbox" id="tongueObstruction"> Tongue obstruction noted</label>
+<input type="file" id="airwayImg" accept="image/*">
+<img id="airwayPrev" class="preview">
+
+<label><input type="checkbox" id="tongue"> Tongue obstruction noted</label>
 
 <label>Mallampati Class:
 <select id="mallampati">
@@ -36,118 +38,26 @@ button { padding:14px 20px; font-size:16px; margin-top:30px; cursor:pointer; }
 </label>
 
 <h3>Mallampati Rationale (Observed)</h3>
-<label><input type="checkbox" id="softPalate"> Soft palate visible</label>
+<label><input type="checkbox" id="soft"> Soft palate visible</label>
 <label><input type="checkbox" id="uvula"> Uvula visible</label>
 <label><input type="checkbox" id="pillars"> Faucial pillars visible</label>
-<label><input type="checkbox" id="hardPalate"> Only hard palate visible</label>
-
-<h3>Image QA</h3>
-<label><input type="checkbox" id="aqQuality"> Image quality acceptable</label>
-<label><input type="checkbox" id="aqOrientation"> Orientation correct</label>
-<label><input type="checkbox" id="aqAnatomy"> Anatomical region visible</label>
-<label><input type="checkbox" id="aqConcern"> Potential concern noted</label>
+<label><input type="checkbox" id="hard"> Only hard palate visible</label>
 </div>
 
 <!-- DENTITION -->
 <div class="section">
 <h2>Dentition Images</h2>
-
 <div id="dentition"></div>
 </div>
 
-<button onclick="generatePDF()">Generate PDF Report</button>
+<!-- I6 OCCLUSION -->
+<div class="section">
+<h2>I6 – Natural Occlusion</h2>
+
+<input type="file" id="I6img" accept="image/*">
+<img id="I6prev" class="preview">
+
+<label><input type="checkbox" id="occlusion"> Occlusal instability noted</label>
 </div>
 
-<script>
-const dentitionViews = [
-  { id:"I2", label:"Upper Dentition" },
-  { id:"I3", label:"Lower Dentition" },
-  { id:"I4", label:"Right Molars" },
-  { id:"I5", label:"Left Molars" }
-];
-
-const dentDiv = document.getElementById("dentition");
-
-dentitionViews.forEach(v=>{
-  dentDiv.innerHTML += `
-  <div class="section">
-    <h3>${v.id} – ${v.label}</h3>
-    <input type="file" id="${v.id}img" accept="image/*"><br>
-    <img id="${v.id}prev" class="preview">
-
-    <label><input type="checkbox" id="${v.id}missing"> Missing teeth</label>
-    <label><input type="checkbox" id="${v.id}crowns"> Crowns / restorations</label>
-    <label><input type="checkbox" id="${v.id}chips"> Chips / fractures</label>
-
-    <h4>Image QA</h4>
-    <label><input type="checkbox" id="${v.id}q1"> Image quality acceptable</label>
-    <label><input type="checkbox" id="${v.id}q2"> Orientation correct</label>
-    <label><input type="checkbox" id="${v.id}q3"> Anatomical region visible</label>
-    <label><input type="checkbox" id="${v.id}q4"> Potential concern noted</label>
-  </div>`;
-});
-
-function loadPreview(inputId, imgId){
-  const f=document.getElementById(inputId);
-  const img=document.getElementById(imgId);
-  f.onchange=()=>{ img.src=URL.createObjectURL(f.files[0]); };
-}
-
-loadPreview("airwayImage","airwayPreview");
-dentitionViews.forEach(v=>loadPreview(v.id+"img",v.id+"prev"));
-
-async function generatePDF(){
-  const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF();
-  let y=15;
-
-  pdf.setFontSize(18);
-  pdf.text("Pre-Operative Dental & Airway Report (Interpreted)",10,y); y+=10;
-
-  pdf.setFontSize(14);
-  pdf.text("Airway Assessment",10,y); y+=8;
-
-  pdf.setFontSize(12);
-  pdf.text(`Mallampati Class: ${mallampati.value||"Not selected"}`,10,y); y+=6;
-  pdf.text(`Tongue Obstruction: ${tongueObstruction.checked?"Yes":"No"}`,10,y); y+=6;
-
-  pdf.text("Mallampati Rationale:",10,y); y+=6;
-  pdf.text(`Soft palate visible: ${softPalate.checked?"Yes":"No"}`,14,y); y+=5;
-  pdf.text(`Uvula visible: ${uvula.checked?"Yes":"No"}`,14,y); y+=5;
-  pdf.text(`Faucial pillars visible: ${pillars.checked?"Yes":"No"}`,14,y); y+=5;
-  pdf.text(`Only hard palate visible: ${hardPalate.checked?"Yes":"No"}`,14,y); y+=6;
-
-  pdf.text("Image QA:",10,y); y+=6;
-  pdf.text(`Quality acceptable: ${aqQuality.checked?"Yes":"No"}`,14,y); y+=5;
-  pdf.text(`Orientation correct: ${aqOrientation.checked?"Yes":"No"}`,14,y); y+=5;
-  pdf.text(`Anatomical region visible: ${aqAnatomy.checked?"Yes":"No"}`,14,y); y+=5;
-  pdf.text(`Potential concern noted: ${aqConcern.checked?"Yes":"No"}`,14,y); y+=8;
-
-  if(airwayPreview.src){
-    pdf.addImage(airwayPreview,"JPEG",10,y,60,60);
-    y+=70;
-  }
-
-  pdf.addPage();
-  y=15;
-  pdf.text("Dentition Findings by Image",10,y); y+=8;
-
-  for(const v of dentitionViews){
-    pdf.text(`${v.id}:`,10,y); y+=6;
-
-    const img=document.getElementById(v.id+"prev");
-    if(img.src) pdf.addImage(img,"JPEG",10,y,60,60);
-
-    pdf.text(`Missing teeth: ${document.getElementById(v.id+"missing").checked?"Yes":"No"}`,75,y);
-    pdf.text(`Crowns/restorations: ${document.getElementById(v.id+"crowns").checked?"Yes":"No"}`,75,y+6);
-    pdf.text(`Chips/fractures: ${document.getElementById(v.id+"chips").checked?"Yes":"No"}`,75,y+12);
-
-    y+=70;
-    if(y>260){ pdf.addPage(); y=15; }
-  }
-
-  pdf.save("PreOp_Dental_Airway_Report.pdf");
-}
-</script>
-</body>
-</html>
+<button onclick="generatePD
