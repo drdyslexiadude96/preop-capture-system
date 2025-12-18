@@ -9,10 +9,10 @@
 
 <style>
 body { font-family: Arial, sans-serif; background:#f4f6f8; padding:20px; }
-.container { max-width:900px; margin:auto; background:#fff; padding:25px; border-radius:10px; }
+.container { max-width:950px; margin:auto; background:#fff; padding:25px; border-radius:10px; }
 h1,h2,h3 { margin-top:25px; }
 .section { border-top:1px solid #ddd; padding-top:20px; margin-top:20px; }
-.preview { max-width:220px; margin-top:10px; display:block; border:1px solid #ccc; }
+.preview { max-width:240px; margin-top:10px; display:block; border:1px solid #ccc; }
 .findings { margin-top:10px; padding:10px; background:#f9f9f9; border-radius:6px; }
 label { display:block; margin:4px 0; }
 button { padding:12px 18px; font-size:16px; margin-top:30px; cursor:pointer; }
@@ -47,129 +47,112 @@ small { color:#666; }
 </label>
 
 <div class="findings">
-<strong>Mallampati Rationale (Observed)</strong>
-<label><input type="checkbox" id="palate"> Soft palate visible</label>
-<label><input type="checkbox" id="uvula"> Uvula visible</label>
-<label><input type="checkbox" id="pillars"> Faucial pillars visible</label>
-<label><input type="checkbox" id="hardpalate"> Only hard palate visible</label>
+<strong>Mallampati Rationale (select all observed)</strong>
+<label><input type="checkbox" id="mp_soft"> Soft palate visible</label>
+<label><input type="checkbox" id="mp_uvula"> Uvula partially/fully visible</label>
+<label><input type="checkbox" id="mp_tonsils"> Tonsillar pillars visible</label>
+<label><input type="checkbox" id="mp_hard"> Only hard palate visible</label>
 </div>
 </div>
 
-<!-- I2–I5 DENTITION -->
+<!-- DENTITION TEMPLATE -->
+<script>
+function dentitionBlock(id,title,capture,purpose){
+document.write(`
 <div class="section">
-<h2>Dentition Images</h2>
+<h2>${id} – ${title}</h2>
+<p><b>Capture:</b> ${capture}</p>
+<p><b>Clinical Purpose:</b> ${purpose}</p>
 
-<div>
-<h3>I2 – Upper Dentition</h3>
-<input type="file" id="I2" accept="image/*" onchange="preview(this,'p2')">
-<img id="p2" class="preview">
-<div class="findings">
-<label><input type="checkbox" id="I2_missing"> Missing teeth</label>
-<label><input type="checkbox" id="I2_crowns"> Crowns / restorations</label>
-<label><input type="checkbox" id="I2_chips"> Chips / fractures</label>
-</div>
-</div>
+<input type="file" id="${id}" accept="image/*" onchange="preview(this,'p${id}')">
+<img id="p${id}" class="preview">
 
-<div>
-<h3>I3 – Lower Dentition</h3>
-<input type="file" id="I3" accept="image/*" onchange="preview(this,'p3')">
-<img id="p3" class="preview">
 <div class="findings">
-<label><input type="checkbox" id="I3_missing"> Missing teeth</label>
-<label><input type="checkbox" id="I3_crowns"> Crowns / restorations</label>
-<label><input type="checkbox" id="I3_chips"> Chips / fractures</label>
+<strong>Dentition Findings</strong>
+<label><input type="checkbox" id="${id}_missing"> Missing teeth</label>
+<label><input type="checkbox" id="${id}_crowns"> Crowns / restorations</label>
+<label><input type="checkbox" id="${id}_chips"> Chips / fractures</label>
 </div>
 </div>
-
-<div>
-<h3>I4 – Right Molars</h3>
-<input type="file" id="I4" accept="image/*" onchange="preview(this,'p4')">
-<img id="p4" class="preview">
-<div class="findings">
-<label><input type="checkbox" id="I4_missing"> Missing teeth</label>
-<label><input type="checkbox" id="I4_crowns"> Crowns / restorations</label>
-<label><input type="checkbox" id="I4_chips"> Chips / fractures</label>
-</div>
-</div>
-
-<div>
-<h3>I5 – Left Molars</h3>
-<input type="file" id="I5" accept="image/*" onchange="preview(this,'p5')">
-<img id="p5" class="preview">
-<div class="findings">
-<label><input type="checkbox" id="I5_missing"> Missing teeth</label>
-<label><input type="checkbox" id="I5_crowns"> Crowns / restorations</label>
-<label><input type="checkbox" id="I5_chips"> Chips / fractures</label>
-</div>
-</div>
-</div>
+`);
+}
+dentitionBlock("I2","Upper Dentition","Frontal maxillary view with cheek retraction","Missing teeth, crowns, chips");
+dentitionBlock("I3","Lower Dentition","Frontal mandibular view with cheek retraction","Missing teeth, crowns, chips");
+dentitionBlock("I4","Right Molars","Right posterior dentition with cheek displacement","Posterior dental injury risk");
+dentitionBlock("I5","Left Molars","Left posterior dentition with cheek displacement","Posterior dental injury risk");
+</script>
 
 <!-- I6 -->
 <div class="section">
 <h2>I6 – Natural Occlusion</h2>
+<p><b>Capture:</b> Frontal bite view with teeth in contact</p>
+<p><b>Clinical Purpose:</b> Occlusal alignment, instability</p>
+
 <input type="file" id="I6" accept="image/*" onchange="preview(this,'p6')">
 <img id="p6" class="preview">
+
 <label><input type="checkbox" id="occlusion"> Occlusal instability</label>
 </div>
 
 <button onclick="generatePDF()">Generate PDF Report</button>
+
 <p><small>AI-assisted screening support tool. Clinical judgment required.</small></p>
 
 </div>
 
 <script>
 function preview(input,id){
-  if(input.files[0]){
-    document.getElementById(id).src = URL.createObjectURL(input.files[0]);
-  }
+ if(input.files[0]){
+  document.getElementById(id).src = URL.createObjectURL(input.files[0]);
+ }
 }
-function yn(id){ return document.getElementById(id).checked ? "Yes" : "No"; }
+function yn(id){ return document.getElementById(id)?.checked ? "Yes" : "No"; }
 
-function generatePDF(){
-  const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF();
-  let y = 20;
+async function addImage(pdf,input,y){
+ if(!input.files[0]) return y;
+ const img = await new Promise(r=>{
+  const reader=new FileReader();
+  reader.onload=()=>r(reader.result);
+  reader.readAsDataURL(input.files[0]);
+ });
+ pdf.addImage(img,"JPEG",20,y,80,100);
+ return y+110;
+}
 
-  const mall = document.getElementById("mallampati").value;
-  const tongue = document.getElementById("tongue").checked;
-  const occlusion = document.getElementById("occlusion").checked;
+async function generatePDF(){
+ const { jsPDF } = window.jspdf;
+ const pdf = new jsPDF();
+ let y=20;
 
-  let airwayScore = 0;
-  let dentalScore = 0;
+ pdf.setFontSize(16);
+ pdf.text("Pre-Operative Dental & Airway Report",20,y); y+=12;
 
-  if (mall === "III" || mall === "IV") airwayScore += 2;
-  if (tongue) airwayScore += 1;
+ pdf.setFontSize(12);
+ pdf.text("Airway Assessment",20,y); y+=8;
+ pdf.text("Capture: Mouth open, tongue protruded, patient upright",20,y); y+=6;
+ pdf.text("Clinical Purpose: Mallampati classification, tongue obstruction",20,y); y+=8;
 
-  ["I2","I3","I4","I5"].forEach(i=>{
-    if(document.getElementById(i+"_chips").checked) dentalScore+=2;
-    if(document.getElementById(i+"_crowns").checked) dentalScore+=1;
-    if(document.getElementById(i+"_missing").checked) dentalScore+=1;
-  });
-  if(occlusion) dentalScore+=1;
+ y = await addImage(pdf,document.getElementById("I1"),y);
 
-  const airwayRisk = airwayScore>=3?"HIGH":airwayScore===2?"MODERATE":"LOW";
-  const dentalRisk = dentalScore>=5?"HIGH":dentalScore>=3?"MODERATE":"LOW";
+ pdf.text(`Mallampati Class: ${document.getElementById("mallampati").value}`,20,y); y+=6;
+ pdf.text(`Tongue Obstruction: ${yn("tongue")}`,20,y); y+=10;
 
-  pdf.setFontSize(16);
-  pdf.text("Pre-Operative Dental & Airway Report (Interpreted)",20,y); y+=14;
+ pdf.text("Dentition Findings by Image",20,y); y+=8;
 
-  pdf.setFontSize(12);
-  pdf.text("Airway Assessment",20,y); y+=8;
-  pdf.text(`Mallampati Class: ${mall}`,25,y); y+=6;
-  pdf.text(`Tongue Obstruction: ${tongue?"Yes":"No"}`,25,y); y+=6;
-  pdf.text(`Airway Risk (Rules-based): ${airwayRisk}`,25,y); y+=10;
+ for(const i of ["I2","I3","I4","I5"]){
+  pdf.text(`${i}:`,20,y); y+=6;
+  y = await addImage(pdf,document.getElementById(i),y);
+  pdf.text(`• Missing teeth: ${yn(i+"_missing")}`,25,y); y+=5;
+  pdf.text(`• Crowns/restorations: ${yn(i+"_crowns")}`,25,y); y+=5;
+  pdf.text(`• Chips/fractures: ${yn(i+"_chips")}`,25,y); y+=8;
+ }
 
-  pdf.text("Mallampati Rationale (Observed):",20,y); y+=6;
-  pdf.text(`Soft palate visible: ${yn("palate")}`,25,y); y+=5;
-  pdf.text(`Uvula visible: ${yn("uvula")}`,25,y); y+=5;
-  pdf.text(`Faucial pillars visible: ${yn("pillars")}`,25,y); y+=5;
-  pdf.text(`Only hard palate visible: ${yn("hardpalate")}`,25,y); y+=10;
+ pdf.text(`Occlusal Instability: ${yn("occlusion")}`,20,y); y+=8;
 
-  pdf.text("Dental Risk (Rules-based): "+dentalRisk,20,y); y+=10;
+ pdf.setFontSize(10);
+ pdf.text("Disclaimer: AI-assisted screening; clinical judgment required.",20,y);
 
-  pdf.text("Disclaimer: AI-assisted screening support tool. Human judgment required.",20,280);
-
-  pdf.save("PreOp_Dental_Airway_Report_With_Rationale.pdf");
+ pdf.save("PreOp_Dental_Airway_Report.pdf");
 }
 </script>
 
