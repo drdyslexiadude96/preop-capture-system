@@ -2,17 +2,19 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>Pre-Operative Capture System</title>
+<title>Pre-Operative Capture & Analysis System</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
 body {
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: system-ui, sans-serif;
   background:#eef2f7;
   padding:2rem;
 }
 .card {
-  max-width:900px;
+  max-width:960px;
   margin:auto;
   background:#fff;
   padding:2.5rem;
@@ -20,22 +22,20 @@ body {
   box-shadow:0 12px 40px rgba(0,0,0,.12);
 }
 h1,h2,h3 { margin-top:0; }
-.progress-text { color:#555; font-size:.95rem; }
 .progress {
   height:14px;
   background:#ddd;
   border-radius:7px;
   margin:1rem 0 2rem;
 }
-.progress > div {
+.progress div {
   height:100%;
   background:#22c55e;
   border-radius:7px;
 }
-input { margin-top:1rem; }
 img {
-  margin-top:1rem;
   max-width:100%;
+  margin-top:1rem;
   border-radius:10px;
   border:1px solid #ccc;
 }
@@ -49,63 +49,48 @@ button {
   font-size:1rem;
   cursor:pointer;
 }
-button.secondary { background:#334155; }
-button.export { background:#0f766e; }
-button:disabled { background:#9ca3af; }
-.analysis-box {
+.secondary { background:#334155; }
+.section {
   border:1px solid #ddd;
-  border-radius:10px;
   padding:1rem;
+  border-radius:10px;
   margin-top:1.5rem;
 }
-label {
-  display:block;
-  margin:.5rem 0;
-}
+label { display:block; margin:.4rem 0; }
+select { margin-top:.4rem; }
 </style>
 </head>
 
 <body>
-
 <div class="card" id="app"></div>
 
 <script>
+const { jsPDF } = window.jspdf;
+
 const steps = [
-  "I1 – Airway View",
-  "I2 – Upper Dentition",
-  "I3 – Lower Dentition",
-  "I4 – Right Molars",
-  "I5 – Left Molars",
-  "I6 – Natural Occlusion"
+  { id:"I1", name:"Airway View", desc:"Mouth open, tongue protruded, patient upright" },
+  { id:"I2", name:"Upper Dentition", desc:"Frontal view of maxillary teeth" },
+  { id:"I3", name:"Lower Dentition", desc:"Frontal view of mandibular teeth" },
+  { id:"I4", name:"Right Molars", desc:"Right posterior dentition" },
+  { id:"I5", name:"Left Molars", desc:"Left posterior dentition" },
+  { id:"I6", name:"Natural Occlusion", desc:"Frontal bite with teeth in contact" }
 ];
 
-const instructions = [
-  "Mouth open, tongue protruded, upright.",
-  "Frontal maxillary view.",
-  "Frontal mandibular view.",
-  "Right posterior teeth.",
-  "Left posterior teeth.",
-  "Teeth in contact."
-];
-
-let current = 0;
+let index = 0;
 let images = [];
+let analysis = {};
 
 const app = document.getElementById("app");
 
 function renderCapture() {
   app.innerHTML = `
     <h1>Pre-Operative Capture System</h1>
-    <p class="progress-text">Required Capture ${current+1} of 6</p>
-    <div class="progress"><div style="width:${(current/6)*100}%"></div></div>
-
-    <h2>${steps[current]}</h2>
-    <p>${instructions[current]}</p>
-
+    <div class="progress"><div style="width:${(index/6)*100}%"></div></div>
+    <h2>${steps[index].id} – ${steps[index].name}</h2>
+    <p>${steps[index].desc}</p>
     <input type="file" id="file" accept="image/*" />
-    <img id="preview" style="display:none;" />
-
-    <button id="next" disabled>Next Required Capture</button>
+    <img id="preview" style="display:none" />
+    <button id="next" disabled>Next Capture</button>
   `;
 
   const file = document.getElementById("file");
@@ -113,8 +98,6 @@ function renderCapture() {
   const next = document.getElementById("next");
 
   file.onchange = () => {
-    const f = file.files[0];
-    if (!f) return;
     const r = new FileReader();
     r.onload = e => {
       images.push(e.target.result);
@@ -122,75 +105,74 @@ function renderCapture() {
       preview.style.display = "block";
       next.disabled = false;
     };
-    r.readAsDataURL(f);
+    r.readAsDataURL(file.files[0]);
   };
 
   next.onclick = () => {
-    current++;
-    if (current < 6) renderCapture();
-    else renderComplete();
+    index++;
+    index < 6 ? renderCapture() : renderAnalysis();
   };
-}
-
-function renderComplete() {
-  app.innerHTML = `
-    <h1>Pre-Operative Capture System</h1>
-
-    <p class="progress-text">Required Capture 6 of 6</p>
-    <div class="progress"><div style="width:100%"></div></div>
-
-    <h2>Capture Complete</h2>
-
-    <p>
-      <strong>All required images captured.</strong><br><br>
-      <em>System is ready for analysis, documentation, or secure export.</em>
-    </p>
-
-    <button onclick="renderAnalysis()">🧠 Proceed to Analysis</button>
-  `;
 }
 
 function renderAnalysis() {
   app.innerHTML = `
-    <h1>Capture Analysis</h1>
-    <p><em>Structured review – no AI, no diagnosis.</em></p>
+    <h1>Clinical Analysis</h1>
 
-    ${images.map((img,i)=>`
-      <div class="analysis-box">
-        <h3>${steps[i]}</h3>
-        <img src="${img}" />
-        <label><input type="checkbox"> Image quality acceptable</label>
-        <label><input type="checkbox"> Orientation correct</label>
-        <label><input type="checkbox"> Anatomical region visible</label>
-        <label><input type="checkbox"> Potential concern noted</label>
+    ${steps.map((s,i)=>`
+      <div class="section">
+        <h3>${s.id} – ${s.name}</h3>
+        <img src="${images[i]}" />
+
+        ${s.id==="I1" ? `
+          <label>Mallampati Class:
+            <select onchange="save('${s.id}','mallampati',this.value)">
+              <option></option><option>I</option><option>II</option><option>III</option><option>IV</option>
+            </select>
+          </label>
+          <label><input type="checkbox" onchange="save('${s.id}','tongue',this.checked)"> Tongue obstruction noted</label>
+        ` : s.id==="I6" ? `
+          <label><input type="checkbox" onchange="save('${s.id}','malocclusion',this.checked)"> Occlusal instability</label>
+        ` : `
+          <label><input type="checkbox" onchange="save('${s.id}','missing',this.checked)"> Missing teeth</label>
+          <label><input type="checkbox" onchange="save('${s.id}','crowns',this.checked)"> Crowns / restorations</label>
+          <label><input type="checkbox" onchange="save('${s.id}','chips',this.checked)"> Chips / fractures</label>
+        `}
       </div>
     `).join("")}
 
-    <button class="secondary" onclick="renderFinal()">Complete Analysis</button>
+    <button class="secondary" onclick="generatePDF()">📄 Generate PDF Report</button>
   `;
 }
 
-function renderFinal() {
-  app.innerHTML = `
-    <h1>Analysis Complete</h1>
+function save(step,key,val){
+  if(!analysis[step]) analysis[step]={};
+  analysis[step][key]=val;
+}
 
-    <p>
-      <strong>Capture and analysis complete.</strong><br><br>
-      Images have been reviewed and annotated for downstream use.
-    </p>
+function generatePDF(){
+  const pdf = new jsPDF();
+  let y = 15;
 
-    <button class="secondary" onclick="alert('PDF generation is the next build step')">
-      📄 Generate Capture Report (PDF)
-    </button>
+  pdf.setFontSize(16);
+  pdf.text("Pre-Operative Capture Report",10,y); y+=10;
+  pdf.setFontSize(10);
+  pdf.text(`Generated: ${new Date().toLocaleString()}`,10,y); y+=10;
 
-    <button class="export" onclick="alert('Secure export is the next build step')">
-      🔁 Export / Secure Handoff
-    </button>
-  `;
+  steps.forEach((s,i)=>{
+    pdf.text(`${s.id} – ${s.name}`,10,y); y+=6;
+    pdf.addImage(images[i],"JPEG",10,y,60,45);
+    y+=50;
+    Object.entries(analysis[s.id]||{}).forEach(([k,v])=>{
+      pdf.text(`• ${k}: ${v}`,10,y); y+=5;
+    });
+    if(y>260){ pdf.addPage(); y=15; }
+  });
+
+  pdf.text("Disclaimer: Structured screening only. Clinical judgment required.",10,y+10);
+  pdf.save("PreOp_Report.pdf");
 }
 
 renderCapture();
 </script>
-
 </body>
 </html>
