@@ -15,12 +15,18 @@ body { font-family: Arial, sans-serif; background:#f4f6f8; padding:20px; }
 label { display:block; margin:6px 0; }
 button { padding:16px 24px; font-size:18px; margin-top:40px; cursor:pointer; }
 h2,h3 { margin-bottom:10px; }
+.footer { font-size:10px; color:#555; }
 </style>
 </head>
 
 <body>
 <div class="container">
 <h1>Pre-Operative Dental & Airway Capture System</h1>
+
+<label>
+Patient / Session ID:
+<input type="text" id="sessionId" placeholder="Auto-generated if left blank">
+</label>
 
 <!-- I1 AIRWAY -->
 <div class="section">
@@ -92,22 +98,55 @@ function bindPreview(inputId, imgId) {
 bindPreview("airwayImage","airwayPreview");
 dentitionViews.forEach(v => bindPreview(v.id+"img", v.id+"prev"));
 
-document.getElementById("generateBtn").onclick = generatePDF;
+function waitForImages() {
+  const images = document.querySelectorAll("img.preview");
+  const promises = [];
+  images.forEach(img => {
+    if (!img.src || img.complete) return;
+    promises.push(new Promise(res => {
+      img.onload = res;
+      img.onerror = res;
+    }));
+  });
+  return Promise.all(promises);
+}
 
-async function generatePDF(){
+document.getElementById("generateBtn").onclick = async () => {
+  await waitForImages();
+  generatePDF();
+};
+
+function footer(pdf, pageHeight) {
+  pdf.setFontSize(9);
+  pdf.text("Patent Pending • AI-assisted clinical decision support • Not a diagnostic device", 10, pageHeight - 10);
+}
+
+function generatePDF(){
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF();
+  const pageHeight = pdf.internal.pageSize.height;
   let y = 15;
+
+  const timestamp = new Date();
+  const isoTime = timestamp.toISOString();
+  const displayTime = timestamp.toLocaleString();
+
+  let session = document.getElementById("sessionId").value.trim();
+  if(!session) session = "SESSION-" + Date.now();
 
   const mall = mallampati.value;
   const tongue = tongueObstruction.checked;
 
   let airwayRisk = "LOW";
   if (mall === "III" || mall === "IV" || tongue) airwayRisk = "MODERATE";
-  if ((mall === "IV" && tongue)) airwayRisk = "HIGH";
+  if (mall === "IV" && tongue) airwayRisk = "HIGH";
 
   pdf.setFontSize(18);
-  pdf.text("Pre-Operative Dental & Airway Report (Interpreted)",10,y); y+=10;
+  pdf.text("Pre-Operative Dental & Airway Report",10,y); y+=10;
+
+  pdf.setFontSize(11);
+  pdf.text(`Session ID: ${session}`,10,y); y+=6;
+  pdf.text(`Captured: ${displayTime}`,10,y); y+=8;
 
   pdf.setFontSize(14);
   pdf.text("Airway Assessment",10,y); y+=8;
@@ -115,7 +154,7 @@ async function generatePDF(){
   pdf.setFontSize(12);
   pdf.text(`Mallampati Class: ${mall || "Not selected"}`,10,y); y+=6;
   pdf.text(`Tongue Obstruction: ${tongue ? "Yes":"No"}`,10,y); y+=6;
-  pdf.text(`Airway Risk (Rules-based): ${airwayRisk}`,10,y); y+=8;
+  pdf.text(`Pre-Op Airway Risk Stratification (Decision Support): ${airwayRisk}`,10,y); y+=8;
 
   pdf.text("Mallampati Rationale:",10,y); y+=6;
   pdf.text(`Soft palate visible: ${softPalate.checked?"Yes":"No"}`,14,y); y+=5;
@@ -128,11 +167,16 @@ async function generatePDF(){
     y+=80;
   }
 
+  footer(pdf, pageHeight);
+
   pdf.addPage();
   y=15;
-  pdf.text("Dentition Findings by Image",10,y); y+=8;
+
+  pdf.setFontSize(14);
+  pdf.text("Dentition Findings (Locked Capture Order)",10,y); y+=8;
 
   dentitionViews.forEach(v=>{
+    pdf.setFontSize(12);
     pdf.text(`${v.id} – ${v.label}`,10,y); y+=6;
 
     const img = document.getElementById(v.id+"prev");
@@ -147,12 +191,16 @@ async function generatePDF(){
     }
 
     y+=70;
-    if(y>260){ pdf.addPage(); y=15; }
+    if(y>230){
+      footer(pdf, pageHeight);
+      pdf.addPage();
+      y=15;
+    }
   });
 
-  pdf.text("Disclaimer: AI-assisted screening support tool. Clinical judgment required.",10,285);
+  footer(pdf, pageHeight);
 
-  pdf.save("PreOp_Dental_Airway_Report.pdf");
+  pdf.save(`PreOp_Report_${session}.pdf`);
 }
 
 });
