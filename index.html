@@ -16,7 +16,7 @@ label{display:block;margin:6px 0}
 .incomplete{color:red;font-weight:bold}
 button{padding:10px 18px;font-size:16px}
 img.preview{max-width:250px;margin-top:6px;border:1px solid #ccc}
-.pdf-section img{max-width:300px;margin-bottom:10px}
+.pdf img{max-width:300px;margin-bottom:10px}
 </style>
 </head>
 
@@ -27,11 +27,12 @@ img.preview{max-width:250px;margin-top:6px;border:1px solid #ccc}
 
 <div id="capture">
 
-<!-- I1 -->
+<!-- AIRWAY -->
 <div class="section">
-<h2>I1 — Airway View <span id="i1status" class="incomplete">Incomplete</span></h2>
-<input type="file" id="airwayImg" accept="image/*"><br>
-<label><input type="checkbox" id="tongueObs"> Tongue obstruction noted</label>
+<h2>I1 — Airway View <span id="status_airway" class="incomplete">Incomplete</span></h2>
+<input type="file" id="airway_file" accept="image/*">
+<label><input type="checkbox" id="tongue"> Tongue obstruction noted</label>
+
 <label>Mallampati Class:
 <select id="mallampati">
 <option value="">Select</option>
@@ -48,46 +49,44 @@ img.preview{max-width:250px;margin-top:6px;border:1px solid #ccc}
 <label><input type="checkbox" id="pillars"> Faucial pillars visible</label>
 <label><input type="checkbox" id="hard"> Only hard palate visible</label>
 
-<img id="airwayPreview" class="preview">
+<img id="airway_preview" class="preview">
 </div>
 
-<!-- Dentition -->
 <h2>Dentition Images</h2>
 
 <div class="section">
-<h3>I2 — Upper Dentition <span id="i2status" class="incomplete">Incomplete</span></h3>
-<input type="file" id="i2img" accept="image/*">
-<img id="i2prev" class="preview">
+<h3>I2 — Upper Dentition <span id="status_i2" class="incomplete">Incomplete</span></h3>
+<input type="file" id="i2_file" accept="image/*">
+<img id="i2_preview" class="preview">
 </div>
 
 <div class="section">
-<h3>I3 — Lower Dentition <span id="i3status" class="incomplete">Incomplete</span></h3>
-<input type="file" id="i3img" accept="image/*">
-<img id="i3prev" class="preview">
+<h3>I3 — Lower Dentition <span id="status_i3" class="incomplete">Incomplete</span></h3>
+<input type="file" id="i3_file" accept="image/*">
+<img id="i3_preview" class="preview">
 </div>
 
 <div class="section">
-<h3>I4 — Right Molars <span id="i4status" class="incomplete">Incomplete</span></h3>
-<input type="file" id="i4img" accept="image/*">
-<img id="i4prev" class="preview">
+<h3>I4 — Right Molars <span id="status_i4" class="incomplete">Incomplete</span></h3>
+<input type="file" id="i4_file" accept="image/*">
+<img id="i4_preview" class="preview">
 </div>
 
 <div class="section">
-<h3>I5 — Left Molars <span id="i5status" class="incomplete">Incomplete</span></h3>
-<input type="file" id="i5img" accept="image/*">
-<img id="i5prev" class="preview">
+<h3>I5 — Left Molars <span id="status_i5" class="incomplete">Incomplete</span></h3>
+<input type="file" id="i5_file" accept="image/*">
+<img id="i5_preview" class="preview">
 </div>
 
 <div class="section">
-<h3>I6 — Natural Occlusion <span id="i6status" class="incomplete">Incomplete</span></h3>
-<input type="file" id="i6img" accept="image/*">
-<img id="i6prev" class="preview">
+<h3>I6 — Natural Occlusion <span id="status_i6" class="incomplete">Incomplete</span></h3>
+<input type="file" id="i6_file" accept="image/*">
+<img id="i6_preview" class="preview">
 </div>
 
-<!-- Clinical Interpretation -->
 <div class="section">
 <h2>Clinical Interpretation</h2>
-<div id="interpretationBox">Complete airway inputs to generate interpretation.</div>
+<div id="interpretation">Complete airway inputs to generate interpretation.</div>
 </div>
 
 </div>
@@ -95,61 +94,60 @@ img.preview{max-width:250px;margin-top:6px;border:1px solid #ccc}
 <button onclick="generatePDF()">Generate PDF Report</button>
 
 <script>
-function preview(fileInput, imgEl, statusEl){
- if(!fileInput.files[0]) return;
- const reader=new FileReader();
- reader.onload=e=>{
-   imgEl.src=e.target.result;
-   statusEl.textContent="Complete";
-   statusEl.className="complete";
- };
- reader.readAsDataURL(fileInput.files[0]);
+function bind(fileId, imgId, statusId){
+ document.getElementById(fileId).addEventListener("change",e=>{
+  const file=e.target.files[0];
+  if(!file) return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    document.getElementById(imgId).src=ev.target.result;
+    const s=document.getElementById(statusId);
+    s.textContent="Complete";
+    s.className="complete";
+  };
+  r.readAsDataURL(file);
+ });
 }
 
-["airway","i2","i3","i4","i5","i6"].forEach(id=>{
- document.getElementById(id+"Img")?.addEventListener("change",e=>{
-   preview(e.target, document.getElementById(id+"Preview")||document.getElementById(id+"prev"), document.getElementById(id+"status"));
-   updateInterpretation();
- });
-});
+bind("airway_file","airway_preview","status_airway");
+bind("i2_file","i2_preview","status_i2");
+bind("i3_file","i3_preview","status_i3");
+bind("i4_file","i4_preview","status_i4");
+bind("i5_file","i5_preview","status_i5");
+bind("i6_file","i6_preview","status_i6");
 
 function updateInterpretation(){
- const m=document.getElementById("mallampati").value;
+ const m=mallampati.value;
  if(!m) return;
  let risk="LOW";
  if(m==="II") risk="MODERATE";
- if(m==="III"||m==="IV"||document.getElementById("tongueObs").checked) risk="HIGH";
+ if(m==="III"||m==="IV"||tongue.checked) risk="HIGH";
 
- let findings=[];
- if(soft.checked) findings.push("Soft palate visible");
- if(uvula.checked) findings.push("Uvula visible");
- if(pillars.checked) findings.push("Faucial pillars visible");
- if(hard.checked) findings.push("Only hard palate visible");
+ let f=[];
+ if(soft.checked) f.push("Soft palate visible");
+ if(uvula.checked) f.push("Uvula visible");
+ if(pillars.checked) f.push("Faucial pillars visible");
+ if(hard.checked) f.push("Only hard palate visible");
 
- interpretationBox.innerHTML=
+ interpretation.innerHTML=
  `<strong>Airway Risk:</strong> ${risk}<br>
- <strong>Interpretation:</strong> Mallampati ${m}${tongueObs.checked?" with tongue obstruction noted":""}.<br>
- <strong>Observed Findings:</strong><br>${findings.join("<br>")||"—"}`;
+ <strong>Interpretation:</strong> Mallampati ${m}${tongue.checked?" with tongue obstruction noted":""}.<br>
+ <strong>Observed Findings:</strong><br>${f.join("<br>")||"—"}`;
 }
 
-document.querySelectorAll("input,select").forEach(el=>el.addEventListener("change",updateInterpretation));
+document.querySelectorAll("input,select").forEach(e=>e.addEventListener("change",updateInterpretation));
 
 function generatePDF(){
- const clone=document.getElementById("capture").cloneNode(true);
- clone.classList.add("pdf-section");
+ const node=document.getElementById("capture").cloneNode(true);
+ node.classList.add("pdf");
+ const t=new Date().toLocaleString("en-US",{timeZone:"America/Chicago"});
+ node.prepend(Object.assign(document.createElement("div"),{innerHTML:`<strong>Generated:</strong> ${t} CST<br><br>`}));
 
- const now=new Date().toLocaleString("en-US",{timeZone:"America/Chicago"});
- const stamp=document.createElement("div");
- stamp.innerHTML="<br><strong>Generated:</strong> "+now+" CST<br><br>";
- clone.prepend(stamp);
-
- html2pdf().set({
-   margin:0.5,
-   filename:"PreOp_Report.pdf",
-   image:{type:"jpeg",quality:0.98},
-   html2canvas:{scale:2,useCORS:true},
-   jsPDF:{unit:"in",format:"letter",orientation:"portrait"}
- }).from(clone).save();
+ html2pdf().from(node).set({
+  filename:"PreOp_Report.pdf",
+  html2canvas:{scale:2},
+  jsPDF:{unit:"in",format:"letter",orientation:"portrait"}
+ }).save();
 }
 </script>
 
