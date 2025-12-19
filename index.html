@@ -7,182 +7,185 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <style>
-body {
-  font-family: Arial, Helvetica, sans-serif;
-  margin: 30px;
-}
-h1 { font-size: 32px; }
-h2 { margin-top: 28px; }
-.section { margin-bottom: 28px; }
-.complete { color: green; font-weight: bold; }
-.incomplete { color: red; font-weight: bold; }
-label { display: block; margin: 6px 0; }
-img.preview {
-  max-width: 100%;
-  max-height: 450px;
-  display: block;
-  margin-top: 10px;
-  page-break-inside: avoid;
-}
-.page-break {
-  page-break-before: always;
-}
-button {
-  padding: 10px 18px;
-  font-size: 16px;
-}
-select, input[type=text] {
-  padding: 6px;
-  font-size: 14px;
-}
+body{font-family:Arial,Helvetica,sans-serif;margin:30px}
+h1{font-size:34px}
+h2{margin-top:30px}
+.section{margin-bottom:25px}
+label{display:block;margin:6px 0}
+.complete{color:green;font-weight:bold}
+.incomplete{color:red;font-weight:bold}
+img.preview{max-width:260px;margin-top:10px;border:1px solid #ccc}
+button{padding:10px 18px;font-size:16px}
+hr{margin:25px 0}
 </style>
 </head>
 
 <body>
-<div id="pdfRoot">
 
-<h1>Pre-Operative Dental & Airway Report</h1>
-<strong>Patent Pending</strong> · Clinical documentation support tool
+<h1>Pre-Operative Dental & Airway Capture System</h1>
+<strong>Patent Pending</strong><br><br>
 
-<p><strong>Session ID:</strong> Shawn R.</p>
-<p><strong>Capture Timestamp (CST):</strong> <span id="timestamp"></span></p>
+<label>
+Patient / Session ID:
+<input type="text" id="sessionId" placeholder="Patient Pending">
+</label>
 
-<div class="section">
-<h2>Airway Assessment</h2>
+<hr>
 
-<label>Mallampati Class:
+<h2>I1 — Airway View <span id="airwayStatus" class="incomplete">Incomplete</span></h2>
+
+<label>
+Mallampati Class:
 <select id="mallampati">
 <option value="">Select</option>
-<option value="I">I</option>
-<option value="II">II</option>
-<option value="III">III</option>
-<option value="IV">IV</option>
+<option>I</option>
+<option>II</option>
+<option>III</option>
+<option>IV</option>
 </select>
 </label>
 
-<label><input type="checkbox" id="tongueObs"> Tongue obstruction noted</label>
+<label><input type="checkbox" id="tongue"> Tongue obstruction noted</label>
 
+<strong>Mallampati Rationale (Observed)</strong>
 <label><input type="checkbox" class="obs" value="Soft palate visible"> Soft palate visible</label>
 <label><input type="checkbox" class="obs" value="Uvula visible"> Uvula visible</label>
 <label><input type="checkbox" class="obs" value="Faucial pillars visible"> Faucial pillars visible</label>
 <label><input type="checkbox" class="obs" value="Only hard palate visible"> Only hard palate visible</label>
 
-<label>Airway Image:
-<input type="file" accept="image/*" onchange="loadImage(this,'airwayImg')">
+<label>
+Airway Image:
+<input type="file" id="airwayImage" accept="image/*">
 </label>
-<img id="airwayImg" class="preview">
-</div>
+<img id="airwayPreview" class="preview">
 
-<div class="section page-break">
+<hr>
+
 <h2>Dentition Images</h2>
 
-<div>
-<strong>I2 — Upper Dentition</strong>
-<input type="file" accept="image/*" onchange="loadImage(this,'i2')">
-<img id="i2" class="preview">
-</div>
-
-<div>
-<strong>I3 — Lower Dentition</strong>
-<input type="file" accept="image/*" onchange="loadImage(this,'i3')">
-<img id="i3" class="preview">
-</div>
-
-<div>
-<strong>I4 — Right Molars</strong>
-<input type="file" accept="image/*" onchange="loadImage(this,'i4')">
-<img id="i4" class="preview">
-</div>
-
-<div>
-<strong>I5 — Left Molars</strong>
-<input type="file" accept="image/*" onchange="loadImage(this,'i5')">
-<img id="i5" class="preview">
-</div>
-
-<div>
-<strong>I6 — Natural Occlusion</strong>
-<input type="file" accept="image/*" onchange="loadImage(this,'i6')">
-<img id="i6" class="preview">
-</div>
-</div>
-
-<div class="section page-break">
-<h2>Clinical Interpretation</h2>
-<p><strong>Airway Risk:</strong> <span id="risk"></span></p>
-<p><strong>Risk Description:</strong> <span id="riskDesc"></span></p>
-<p><strong>Interpretation:</strong> <span id="interp"></span></p>
-<p><strong>Observed Findings:</strong><br><span id="findings"></span></p>
+<div class="section">
+<h3>I2 — Upper Dentition <span class="status incomplete">Incomplete</span></h3>
+<input type="file" class="imgInput" accept="image/*">
+<img class="preview">
+<label><input type="checkbox"> Missing teeth</label>
+<label><input type="checkbox"> Crowns / restorations</label>
+<label><input type="checkbox"> Chips / fractures</label>
 </div>
 
 <div class="section">
+<h3>I3 — Lower Dentition <span class="status incomplete">Incomplete</span></h3>
+<input type="file" class="imgInput" accept="image/*">
+<img class="preview">
+<label><input type="checkbox"> Missing teeth</label>
+<label><input type="checkbox"> Crowns / restorations</label>
+<label><input type="checkbox"> Chips / fractures</label>
+</div>
+
+<div class="section">
+<h3>I4 — Right Molars <span class="status incomplete">Incomplete</span></h3>
+<input type="file" class="imgInput" accept="image/*">
+<img class="preview">
+<label><input type="checkbox"> Missing teeth</label>
+<label><input type="checkbox"> Crowns / restorations</label>
+<label><input type="checkbox"> Chips / fractures</label>
+</div>
+
+<div class="section">
+<h3>I5 — Left Molars <span class="status incomplete">Incomplete</span></h3>
+<input type="file" class="imgInput" accept="image/*">
+<img class="preview">
+<label><input type="checkbox"> Missing teeth</label>
+<label><input type="checkbox"> Crowns / restorations</label>
+<label><input type="checkbox"> Chips / fractures</label>
+</div>
+
+<div class="section">
+<h3>I6 — Natural Occlusion <span class="status incomplete">Incomplete</span></h3>
+<input type="file" class="imgInput" accept="image/*">
+<img class="preview">
+<label><input type="checkbox"> Missing teeth</label>
+<label><input type="checkbox"> Crowns / restorations</label>
+<label><input type="checkbox"> Chips / fractures</label>
+</div>
+
+<hr>
+
+<h2>Clinical Interpretation</h2>
+<div id="clinicalText">
+Airway Risk:<br>
+Risk Description:<br>
+Interpretation:<br>
+Observed Findings:
+</div>
+
+<hr>
+
 <h2>Reviewer</h2>
-<label>Name: <input type="text" id="reviewer"></label>
-<label>Role:
+<label>Reviewed by: <input type="text" id="reviewer"></label>
+
+<label>
+Role:
 <select id="role">
 <option value="">Select</option>
 <option>CRNA</option>
-<option>MD</option>
-<option>DO</option>
-<option>RN</option>
+<option>Anesthesiologist</option>
+<option>Dentist</option>
+<option>Surgeon</option>
 </select>
 </label>
-<label><input type="checkbox"> Reviewed prior to induction</label>
-</div>
 
-</div>
+<label><input type="checkbox" id="prior"> Reviewed prior to induction</label>
 
+<br><br>
 <button onclick="generatePDF()">Generate PDF Report</button>
 
 <script>
-function loadImage(input, id) {
-  const reader = new FileReader();
-  reader.onload = () => document.getElementById(id).src = reader.result;
-  if (input.files[0]) reader.readAsDataURL(input.files[0]);
+function preview(input, img){
+const file=input.files[0];
+if(!file)return;
+const reader=new FileReader();
+reader.onload=e=>img.src=e.target.result;
+reader.readAsDataURL(file);
 }
 
-function updateAssessment() {
-  const m = document.getElementById('mallampati').value;
-  const t = document.getElementById('tongueObs').checked;
-  let risk = "LOW";
-  let desc = "Low predicted airway difficulty.";
+document.getElementById("airwayImage").onchange=function(){
+preview(this,document.getElementById("airwayPreview"));
+if(this.files.length)document.getElementById("airwayStatus").textContent="Complete";
+document.getElementById("airwayStatus").className="complete";
+};
 
-  if (m === "II") { risk = "MODERATE"; desc = "Moderate airway difficulty anticipated."; }
-  if (m === "III" || m === "IV" || t) {
-    risk = "HIGH";
-    desc = "High likelihood of airway management difficulty. Prepare advanced airway strategies.";
-  }
+document.querySelectorAll(".imgInput").forEach((input,i)=>{
+const img=document.querySelectorAll(".preview")[i+1];
+const status=document.querySelectorAll(".status")[i];
+input.onchange=function(){
+preview(this,img);
+status.textContent="Complete";
+status.className="status complete";
+};
+});
 
-  document.getElementById('risk').innerText = risk;
-  document.getElementById('riskDesc').innerText = desc;
-  document.getElementById('interp').innerText =
-    `Mallampati ${m || "N/A"}${t ? " with tongue obstruction noted." : "."}`;
+function generatePDF(){
+const ts=new Date().toLocaleString("en-US",{timeZone:"America/Chicago"});
+const pdf=document.createElement("div");
+pdf.innerHTML=`
+<h1>Pre-Operative Dental & Airway Report</h1>
+<strong>Patent Pending · Clinical documentation support tool</strong><br><br>
+Session ID: ${document.getElementById("sessionId").value || "Patient Pending"}<br>
+Capture Timestamp (CST): ${ts}<br><br>
 
-  const obs = [...document.querySelectorAll('.obs:checked')]
-    .map(o => o.value).join('<br>');
-  document.getElementById('findings').innerHTML = obs || '—';
+<h2>Airway Assessment</h2>
+Mallampati Class: ${mallampati.value}<br>
+Tongue Obstruction: ${tongue.checked?"Yes":"No"}<br><br>
+
+<h3>Observed Findings</h3>
+${[...document.querySelectorAll(".obs:checked")].map(o=>o.value).join("<br>")}
+`;
+html2pdf().set({
+margin:10,
+filename:"PreOp_Report.pdf",
+html2canvas:{scale:2,useCORS:true}
+}).from(pdf).save();
 }
-
-document.addEventListener('change', updateAssessment);
-
-function generatePDF() {
-  updateAssessment();
-  const opt = {
-    margin: 0.5,
-    filename: 'Pre-Operative_Dental_Airway_Report.pdf',
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true },
-    jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-  };
-  html2pdf().set(opt).from(document.getElementById('pdfRoot')).save();
-}
-
-function setTimestamp() {
-  const d = new Date();
-  document.getElementById('timestamp').innerText =
-    d.toLocaleString("en-US", { timeZone: "America/Chicago" });
-}
-setTimestamp();
 </script>
 
 </body>
