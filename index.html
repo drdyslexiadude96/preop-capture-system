@@ -65,7 +65,7 @@ Patient / Session ID:
 
 <!-- I1 AIRWAY -->
 <div class="section">
-<h2>I1 – Airway View <span id="status-I1" class="status incomplete">Incomplete</span></h2>
+<h2>I1 — Airway View <span id="status-I1" class="status incomplete">Incomplete</span></h2>
 <input type="file" id="airwayImage" accept="image/*">
 <img id="airwayPreview" class="preview">
 
@@ -75,3 +75,137 @@ Patient / Session ID:
 <select id="mallampati">
 <option value="">Select</option>
 <option>I</option>
+<option>II</option>
+<option>III</option>
+<option>IV</option>
+</select>
+</label>
+
+<h3>Mallampati Rationale (Observed)</h3>
+<label><input type="checkbox" id="softPalate"> Soft palate visible</label>
+<label><input type="checkbox" id="uvula"> Uvula visible</label>
+<label><input type="checkbox" id="pillars"> Faucial pillars visible</label>
+<label><input type="checkbox" id="hardPalate"> Only hard palate visible</label>
+</div>
+
+<!-- DENTITION -->
+<div class="section">
+<h2>Dentition Images</h2>
+
+<div class="section">
+<h3>I2 — Upper Dentition <span id="status-I2" class="status incomplete">Incomplete</span></h3>
+<input type="file" id="I2img" accept="image/*">
+<img id="I2prev" class="preview">
+</div>
+
+<div class="section">
+<h3>I3 — Lower Dentition <span id="status-I3" class="status incomplete">Incomplete</span></h3>
+<input type="file" id="I3img" accept="image/*">
+<img id="I3prev" class="preview">
+</div>
+
+<div class="section">
+<h3>I4 — Right Molars <span id="status-I4" class="status incomplete">Incomplete</span></h3>
+<input type="file" id="I4img" accept="image/*">
+<img id="I4prev" class="preview">
+</div>
+
+<div class="section">
+<h3>I5 — Left Molars <span id="status-I5" class="status incomplete">Incomplete</span></h3>
+<input type="file" id="I5img" accept="image/*">
+<img id="I5prev" class="preview">
+</div>
+
+<div class="section">
+<h3>I6 — Natural Occlusion <span id="status-I6" class="status incomplete">Incomplete</span></h3>
+<input type="file" id="I6img" accept="image/*">
+<img id="I6prev" class="preview">
+</div>
+</div>
+
+<!-- CLINICAL -->
+<div class="section">
+<h2>Clinical Interpretation</h2>
+<div id="clinicalText"><em>Complete airway inputs to generate interpretation.</em></div>
+</div>
+
+<button id="generateBtn" disabled>Generate PDF Report</button>
+
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+function bindPreview(inputId, imgId, statusId){
+  const input=document.getElementById(inputId);
+  const img=document.getElementById(imgId);
+  input.addEventListener("change",()=>{
+    if(input.files[0]){
+      img.src=URL.createObjectURL(input.files[0]);
+      document.getElementById(statusId).textContent="Complete";
+      document.getElementById(statusId).className="status complete";
+      validateReady();
+    }
+  });
+}
+
+bindPreview("airwayImage","airwayPreview","status-I1");
+["I2","I3","I4","I5","I6"].forEach(id=>{
+  bindPreview(id+"img",id+"prev","status-"+id);
+});
+
+function validateReady(){
+  const ready=["I1","I2","I3","I4","I5","I6"]
+    .every(id=>document.getElementById("status-"+id).classList.contains("complete"));
+  document.getElementById("generateBtn").disabled=!ready;
+}
+
+function cst(){
+  return new Date().toLocaleString("en-US",{timeZone:"America/Chicago"})+" CST";
+}
+
+function updateClinical(){
+  if(!mallampati.value){
+    clinicalText.innerHTML="<em>Complete airway inputs to generate interpretation.</em>";
+    return;
+  }
+  let risk="LOW";
+  if(mallampati.value==="II") risk="MODERATE";
+  if(["III","IV"].includes(mallampati.value)||tongueObstruction.checked) risk="HIGH";
+
+  clinicalText.innerHTML=
+    "<strong>Airway Risk:</strong> "+risk+"<br>"+
+    "<strong>Interpretation:</strong> Mallampati "+mallampati.value+
+    (tongueObstruction.checked?" with tongue obstruction noted.":"");
+}
+
+["mallampati","tongueObstruction","softPalate","uvula","pillars","hardPalate"]
+.forEach(id=>document.getElementById(id).addEventListener("change",updateClinical));
+
+document.getElementById("generateBtn").onclick=()=>{
+  const {jsPDF}=window.jspdf;
+  const pdf=new jsPDF();
+  let y=15;
+
+  const sid=sessionId.value||"SESSION-"+Date.now();
+
+  pdf.setFontSize(18);
+  pdf.text("Pre-Operative Dental & Airway Report",10,y); y+=10;
+
+  pdf.setFontSize(12);
+  pdf.text("Session ID: "+sid,10,y); y+=6;
+  pdf.text("Capture Timestamp (CST): "+cst(),10,y); y+=10;
+
+  pdf.text("Mallampati Class: "+mallampati.value,10,y); y+=6;
+  pdf.text("Tongue Obstruction: "+(tongueObstruction.checked?"Yes":"No"),10,y); y+=10;
+
+  pdf.text(clinicalText.innerText,10,y);
+
+  pdf.save("PreOp_"+sid+".pdf");
+};
+
+});
+</script>
+
+</body>
+</html>
