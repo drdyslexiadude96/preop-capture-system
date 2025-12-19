@@ -1,229 +1,44 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Pre-Operative Dental & Airway Capture System</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
-<style>
-body {
-  font-family: Arial, sans-serif;
-  background:#f4f6f8;
-  padding:20px;
-}
-.container {
-  max-width:1000px;
-  margin:auto;
-  background:#fff;
-  padding:30px;
-  border-radius:10px;
-}
-.section {
-  border-top:1px solid #ddd;
-  margin-top:30px;
-  padding-top:20px;
-}
-.preview {
-  max-width:240px;
-  display:block;
-  margin:10px 0;
-  border:1px solid #ccc;
-}
-.status {
-  font-weight:bold;
-  margin-left:10px;
-}
-.complete { color:green; }
-.incomplete { color:red; }
-
-button {
-  padding:16px 24px;
-  font-size:18px;
-  margin-top:40px;
-  cursor:pointer;
-}
-button:disabled {
-  opacity:0.5;
-  cursor:not-allowed;
-}
-
-h2,h3 { margin-bottom:10px; }
-
-.footer-note {
-  font-size:10px;
-  color:#555;
-  text-align:center;
-}
-</style>
-</head>
-
-<body>
-<div class="container">
-
-<h1>Pre-Operative Dental & Airway Capture System</h1>
-<p><strong>Patent Pending</strong></p>
-
-<label>
-Patient / Session ID:
-<input type="text" id="sessionId" placeholder="Auto-generated if left blank">
-</label>
-
-<!-- I1 AIRWAY -->
-<div class="section">
-<h2>I1 – Airway View <span id="status-I1" class="status incomplete">Incomplete</span></h2>
-<input type="file" id="airwayImage" accept="image/*">
-<img id="airwayPreview" class="preview">
-
-<label><input type="checkbox" id="tongueObstruction"> Tongue obstruction noted</label>
-
-<label>Mallampati Class:
-<select id="mallampati">
-<option value="">Select</option>
-<option>I</option><option>II</option><option>III</option><option>IV</option>
-</select>
-</label>
-
-<h3>Mallampati Rationale (Observed)</h3>
-<label><input type="checkbox" id="softPalate"> Soft palate visible</label>
-<label><input type="checkbox" id="uvula"> Uvula visible</label>
-<label><input type="checkbox" id="pillars"> Faucial pillars visible</label>
-<label><input type="checkbox" id="hardPalate"> Only hard palate visible</label>
-</div>
-
-<!-- DENTITION -->
-<div class="section">
 <h2>Dentition Images</h2>
-<div id="dentition"></div>
+
+<div class="dentition-block">
+  <strong>I2 — Upper Dentition</strong>
+  <span class="status incomplete" id="s2">Incomplete</span><br>
+  <small>Maxillary teeth, frontal view, full arch visible</small><br>
+  <input type="file" id="i2">
 </div>
 
-<button id="generateBtn" disabled>Generate PDF Report</button>
+<hr>
 
+<div class="dentition-block">
+  <strong>I3 — Lower Dentition</strong>
+  <span class="status incomplete" id="s3">Incomplete</span><br>
+  <small>Mandibular teeth, frontal view, full arch visible</small><br>
+  <input type="file" id="i3">
 </div>
 
-<script>
-document.addEventListener("DOMContentLoaded", () => {
+<hr>
 
-const dentitionViews = [
-  { id:"I2", label:"Upper Dentition" },
-  { id:"I3", label:"Lower Dentition" },
-  { id:"I4", label:"Right Molars" },
-  { id:"I5", label:"Left Molars" },
-  { id:"I6", label:"Natural Occlusion", occlusion:true }
-];
+<div class="dentition-block">
+  <strong>I4 — Right Molars</strong>
+  <span class="status incomplete" id="s4">Incomplete</span><br>
+  <small>Right posterior occlusal surfaces</small><br>
+  <input type="file" id="i4">
+</div>
 
-const dentDiv = document.getElementById("dentition");
+<hr>
 
-dentitionViews.forEach(v => {
-  dentDiv.insertAdjacentHTML("beforeend", `
-    <div class="section">
-      <h3>${v.id} – ${v.label} <span id="status-${v.id}" class="status incomplete">Incomplete</span></h3>
-      <input type="file" id="${v.id}img" accept="image/*">
-      <img id="${v.id}prev" class="preview">
-    </div>
-  `);
-});
+<div class="dentition-block">
+  <strong>I5 — Left Molars</strong>
+  <span class="status incomplete" id="s5">Incomplete</span><br>
+  <small>Left posterior occlusal surfaces</small><br>
+  <input type="file" id="i5">
+</div>
 
-function bindPreview(inputId, imgId, statusId) {
-  const input = document.getElementById(inputId);
-  const img = document.getElementById(imgId);
-  input.addEventListener("change", () => {
-    if (input.files[0]) {
-      img.src = URL.createObjectURL(input.files[0]);
-      document.getElementById(statusId).textContent = "Complete";
-      document.getElementById(statusId).className = "status complete";
-      validateReady();
-    }
-  });
-}
+<hr>
 
-bindPreview("airwayImage","airwayPreview","status-I1");
-dentitionViews.forEach(v => bindPreview(v.id+"img", v.id+"prev", "status-"+v.id));
-
-function validateReady() {
-  const allComplete = ["I1","I2","I3","I4","I5","I6"]
-    .every(id => document.getElementById("status-"+id).classList.contains("complete"));
-  document.getElementById("generateBtn").disabled = !allComplete;
-}
-
-/* ✅ CST TIMESTAMP */
-function formatTimestampCST() {
-  return new Date().toLocaleString("en-US", {
-    timeZone: "America/Chicago",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: true
-  }) + " CST";
-}
-
-document.getElementById("generateBtn").onclick = generatePDF;
-
-function generatePDF(){
-  const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF();
-
-  const session = sessionId.value || "AUTO-" + Date.now();
-  const timestamp = formatTimestampCST();
-
-  const mall = mallampati.value;
-  const tongue = tongueObstruction.checked;
-
-  let risk = "LOW";
-  if (mall === "II") risk = "MODERATE";
-  if (mall === "III" || mall === "IV" || tongue) risk = "HIGH";
-
-  let interpretation =
-    `Mallampati ${mall}` + (tongue ? " with tongue obstruction noted." : ".");
-
-  let y = 15;
-  pdf.setFontSize(18);
-  pdf.text("Pre-Operative Dental & Airway Report",10,y); y+=8;
-
-  pdf.setFontSize(12);
-  pdf.text(`Session ID: ${session}`,10,y); y+=6;
-  pdf.text(`Capture Timestamp (CST): ${timestamp}`,10,y); y+=10;
-
-  pdf.setFontSize(14);
-  pdf.text("Clinical Airway Assessment",10,y); y+=8;
-
-  pdf.setFontSize(12);
-  pdf.text(`Mallampati Class: ${mall}`,10,y); y+=6;
-  pdf.text(`Tongue Obstruction: ${tongue ? "Yes" : "No"}`,10,y); y+=6;
-  pdf.text(`Airway Risk: ${risk}`,10,y); y+=6;
-  pdf.text(`Interpretation: ${interpretation}`,10,y); y+=10;
-
-  if (airwayPreview.src) {
-    pdf.addImage(airwayPreview,"JPEG",10,y,70,70);
-    y+=80;
-  }
-
-  pdf.addPage();
-  y = 15;
-  pdf.setFontSize(14);
-  pdf.text("Dentition Images",10,y); y+=8;
-
-  dentitionViews.forEach(v=>{
-    const img = document.getElementById(v.id+"prev");
-    pdf.setFontSize(12);
-    pdf.text(`${v.id} – ${v.label}`,10,y); y+=6;
-    if(img.src) pdf.addImage(img,"JPEG",10,y,60,60);
-    y+=70;
-    if(y>260){ pdf.addPage(); y=15; }
-  });
-
-  pdf.setFontSize(10);
-  pdf.text("Patent Pending",10,285);
-
-  pdf.save(`PreOp_${session}.pdf`);
-}
-
-});
-</script>
-
-</body>
-</html>
+<div class="dentition-block">
+  <strong>I6 — Natural Occlusion</strong>
+  <span class="status incomplete" id="s6">Incomplete</span><br>
+  <small>Teeth gently closed, natural bite alignment</small><br>
+  <input type="file" id="i6">
+</div>
