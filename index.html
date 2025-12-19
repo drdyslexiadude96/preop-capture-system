@@ -16,11 +16,14 @@ h2 { margin-top:30px; }
 img.preview { max-width:250px; display:block; margin-top:10px; border:1px solid #ccc; }
 label { display:block; margin:5px 0; }
 button { padding:10px 18px; font-size:16px; margin-top:20px; }
-input[type=text] { padding:6px; width:250px; }
+input[type=text], select { padding:6px; width:260px; }
+.hidden { display:none; }
 </style>
 </head>
 
 <body>
+
+<div id="pdfRoot">
 
 <h1>Pre-Operative Dental & Airway Capture System</h1>
 <strong>Patent Pending</strong><br><br>
@@ -59,7 +62,6 @@ Patient / Session ID:
 <!-- ================= DENTITION ================= -->
 <div class="section">
 <h2>Dentition Images</h2>
-
 <div id="dentition"></div>
 </div>
 
@@ -75,12 +77,19 @@ Patient / Session ID:
 
 <label>
 Reviewed by:
-<input type="text" id="reviewerName" placeholder="Name">
+<input type="text" id="reviewerName">
 </label>
 
 <label>
 Role:
-<input type="text" id="reviewerRole" placeholder="CRNA / MD / DDS">
+<select id="reviewerRole">
+<option value="">Select</option>
+<option>CRNA</option>
+<option>MD</option>
+<option>DDS</option>
+<option>RN</option>
+<option>PA</option>
+</select>
 </label>
 
 <label>
@@ -88,7 +97,9 @@ Role:
 </label>
 </div>
 
-<button onclick="generatePDF()">Generate PDF Report</button>
+</div>
+
+<button id="pdfBtn" onclick="generatePDF()">Generate PDF Report</button>
 
 <script>
 const images = {};
@@ -152,32 +163,22 @@ function updateClinical(){
 document.querySelectorAll("input,select").forEach(e=>e.addEventListener("change",updateClinical));
 
 function generatePDF(){
+  document.getElementById("pdfBtn").classList.add("hidden");
+
   const now = new Date().toLocaleString("en-US",{timeZone:"America/Chicago"});
-  const session = sessionId.value || "Patient Pending";
-
-  const pdf = document.createElement("div");
-  pdf.innerHTML = `
-  <h1>Pre-Operative Dental & Airway Report</h1>
-  <strong>Session ID:</strong> ${session}<br>
-  <strong>Capture Timestamp (CST):</strong> ${now}<br><br>
-  ${clinicalBox.innerHTML}
-  ${signatureBox.innerHTML}
-  `;
-
-  Object.values(images).forEach(src=>{
-    const img=document.createElement("img");
-    img.src=src;
-    img.style.maxWidth="250px";
-    img.style.display="block";
-    pdf.appendChild(img);
-  });
+  const stamp = document.createElement("div");
+  stamp.innerHTML = `<strong>Capture Timestamp (CST):</strong> ${now}<br><br>`;
+  pdfRoot.insertBefore(stamp, pdfRoot.firstChild);
 
   html2pdf().set({
     margin:10,
-    filename:`PreOp_${session}.pdf`,
-    html2canvas:{scale:2},
+    filename:`PreOp_${sessionId.value || "Patient"}.pdf`,
+    html2canvas:{scale:2,useCORS:true},
     jsPDF:{unit:"mm",format:"a4"}
-  }).from(pdf).save();
+  }).from(pdfRoot).save().then(()=>{
+    stamp.remove();
+    document.getElementById("pdfBtn").classList.remove("hidden");
+  });
 }
 </script>
 
