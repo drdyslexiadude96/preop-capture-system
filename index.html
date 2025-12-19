@@ -1,15 +1,10 @@
-// ===============================
-// LAYER 2 — CLINICAL SEMANTICS
-// DO NOT MODIFY LAYER 1
-// ===============================
-
 (function () {
   const interpretationBox = document.getElementById("clinical-interpretation");
   if (!interpretationBox) return;
 
   function updateInterpretation() {
     const mallampati = document.getElementById("mallampati")?.value || "";
-    const tongue = document.getElementById("tongueObs")?.checked;
+    const tongue = document.getElementById("tongueObs")?.checked || false;
 
     if (!mallampati) {
       interpretationBox.innerHTML =
@@ -18,11 +13,10 @@
     }
 
     let risk = "LOW";
-
     if (mallampati === "II") risk = "MODERATE";
     if (mallampati === "III" || mallampati === "IV" || tongue) risk = "HIGH";
 
-    let rationale = [];
+    const rationale = [];
     if (document.getElementById("soft")?.checked) rationale.push("Soft palate visible");
     if (document.getElementById("uvula")?.checked) rationale.push("Uvula visible");
     if (document.getElementById("pillars")?.checked) rationale.push("Faucial pillars visible");
@@ -38,16 +32,8 @@
     `;
   }
 
-  [
-    "mallampati",
-    "tongueObs",
-    "soft",
-    "uvula",
-    "pillars",
-    "hard",
-  ].forEach(id => {
+  ["mallampati", "tongueObs", "soft", "uvula", "pillars", "hard"].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener("change", updateInterpretation);
   });
-
 })();
