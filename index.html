@@ -32,7 +32,8 @@ Patient / Session ID:
 
 <hr>
 
-<!-- I1 -->
+<!-- ================= LAYER 1 (LOCKED) ================= -->
+
 <div class="section">
 <h2>I1 — Airway View</h2>
 
@@ -59,7 +60,6 @@ Mallampati:
 
 <hr>
 
-<!-- I2–I6 -->
 <div class="section">
 <h2>I2–I6 Dentition Images</h2>
 
@@ -81,7 +81,8 @@ Mallampati:
 
 <hr>
 
-<!-- LAYER 2 -->
+<!-- ================= LAYER 2 (CLINICAL SEMANTICS ONLY) ================= -->
+
 <div class="section">
 <h2>Clinical Interpretation</h2>
 
@@ -106,78 +107,80 @@ Role:
 <button id="pdfBtn" disabled>Generate PDF Report</button>
 
 <script>
+/* ===== Layer 1 logic (unchanged) ===== */
 const files = ["i2","i3","i4","i5","i6"];
-
 files.forEach((id,i)=>{
-document.getElementById(id).addEventListener("change",()=>{
-document.getElementById("s"+(i+2)).textContent="Complete";
-document.getElementById("s"+(i+2)).className="complete";
-checkReady();
-});
+  document.getElementById(id).addEventListener("change",()=>{
+    document.getElementById("s"+(i+2)).textContent="Complete";
+    document.getElementById("s"+(i+2)).className="complete";
+    checkReady();
+  });
 });
 
 function checkReady(){
-const all = files.every(id=>document.getElementById(id).files.length>0);
-document.getElementById("pdfBtn").disabled = !all;
+  const all = files.every(id=>document.getElementById(id).files.length>0);
+  document.getElementById("pdfBtn").disabled = !all;
 }
 
 function cstTime(){
-return new Date().toLocaleString("en-US",{
-timeZone:"America/Chicago",
-hour:"2-digit",
-minute:"2-digit",
-month:"short",
-day:"2-digit",
-year:"numeric"
-});
+  return new Date().toLocaleString("en-US",{
+    timeZone:"America/Chicago",
+    year:"numeric",
+    month:"short",
+    day:"numeric",
+    hour:"2-digit",
+    minute:"2-digit",
+    hour12:true
+  }) + " CST";
 }
+
+/* ===== Layer 2 interpretation logic ===== */
+document.getElementById("mallampati").addEventListener("change", updateRisk);
+document.getElementById("tongueObs").addEventListener("change", updateRisk);
 
 function updateRisk(){
-const m = mallampati.value;
-const t = tongueObs.checked;
-if(!m){
-riskText.innerHTML = "<em>Complete airway inputs to generate interpretation.</em>";
-return;
+  const m = mallampati.value;
+  const t = tongueObs.checked;
+  if(!m) return;
+
+  let risk = (m==="III" || m==="IV" || t) ? "HIGH" : "MODERATE";
+  let explanation = `Mallampati ${m}` + (t ? " with tongue obstruction noted." : ".");
+
+  document.getElementById("riskText").innerHTML =
+    `<strong>Airway Risk Assessment:</strong> ${risk}<br>
+     <strong>Clinical Interpretation:</strong> ${explanation}`;
 }
-const risk = (m==="III"||m==="IV"||t) ? "HIGH" : "MODERATE";
-riskText.innerHTML =
-"<strong>Airway Risk:</strong> "+risk+
-"<br><strong>Clinical Interpretation:</strong> Mallampati "+m+
-(t ? " with tongue obstruction noted." : ".");
-}
 
-mallampati.addEventListener("change", updateRisk);
-tongueObs.addEventListener("change", updateRisk);
+/* ===== PDF (Layer 1 preserved + Layer 2 appended) ===== */
+document.getElementById("pdfBtn").onclick = ()=>{
+  const sid = sessionId.value || "SESSION-"+Date.now();
+  const pdf = document.createElement("div");
 
-pdfBtn.onclick = ()=>{
-const sid = sessionId.value || "SESSION-"+Date.now();
-const pdf = document.createElement("div");
+  pdf.innerHTML = `
+  <h1>Pre-Operative Dental & Airway Report</h1>
 
-pdf.innerHTML = `
-<h1>Pre-Operative Dental & Airway Report</h1>
+  <p><strong>Session ID:</strong> ${sid}</p>
+  <p><strong>Capture Timestamp (CST):</strong> ${cstTime()}</p>
 
-<p><strong>Session ID:</strong> ${sid}</p>
-<p><strong>Capture Timestamp (CST):</strong> ${cstTime()}</p>
+  <p><strong>Mallampati Class:</strong> ${mallampati.value}</p>
+  <p><strong>Tongue Obstruction:</strong> ${tongueObs.checked?"Yes":"No"}</p>
 
-<p><strong>Mallampati Class:</strong> ${mallampati.value}</p>
-<p><strong>Tongue Obstruction:</strong> ${tongueObs.checked?"Yes":"No"}</p>
+  <p><strong>Mallampati Rationale:</strong><br>
+    Soft palate visible: ${soft.checked?"Yes":"No"}<br>
+    Uvula visible: ${uvula.checked?"Yes":"No"}<br>
+    Faucial pillars visible: ${pillars.checked?"Yes":"No"}<br>
+    Only hard palate visible: ${hard.checked?"Yes":"No"}
+  </p>
 
-<p><strong>Mallampati Rationale:</strong><br>
-Soft palate visible: ${soft.checked?"Yes":"No"}<br>
-Uvula visible: ${uvula.checked?"Yes":"No"}<br>
-Faucial pillars visible: ${pillars.checked?"Yes":"No"}<br>
-Only hard palate visible: ${hard.checked?"Yes":"No"}
-</p>
+  <p>${document.getElementById("riskText").innerText}</p>
 
-<p>${riskText.innerText}</p>
+  <p><strong>Reviewed by:</strong> ${reviewer.value || "—"}</p>
+  <p><strong>Role:</strong> ${role.value || "—"}</p>
+  <p><strong>Reviewed prior to induction:</strong> ${reviewed.checked?"Yes":"No"}</p>
+  <p><strong>Review Timestamp (CST):</strong> ${cstTime()}</p>
+  `;
 
-<p><strong>Reviewed by:</strong> ${reviewer.value || "—"}</p>
-<p><strong>Role:</strong> ${role.value || "—"}</p>
-<p><strong>Reviewed prior to induction:</strong> ${reviewed.checked?"Yes":"No"}</p>
-<p><strong>Review Timestamp (CST):</strong> ${cstTime()}</p>
-`;
-
-html2pdf().from(pdf).save(`PreOp_${sid}.pdf`);
+  html2pdf().from(pdf).save(`PreOp_${sid}.pdf`);
 };
 </script>
 
