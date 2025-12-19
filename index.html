@@ -14,34 +14,33 @@ body { font-family: Arial, sans-serif; background:#f4f6f8; padding:20px; }
 .preview { max-width:240px; display:block; margin:10px 0; border:1px solid #ccc; }
 label { display:block; margin:6px 0; }
 button { padding:16px 24px; font-size:18px; margin-top:40px; cursor:pointer; }
-button:disabled { background:#ccc; cursor:not-allowed; }
 h2,h3 { margin-bottom:10px; }
-
-.status-dot {
-  display:inline-block;
-  width:12px;
-  height:12px;
-  border-radius:50%;
-  margin-left:10px;
-  background:#e74c3c;
-}
-.status-complete { background:#2ecc71; }
+.status { font-size:14px; font-weight:bold; }
+.status.incomplete { color:red; }
+.status.complete { color:green; }
 </style>
 </head>
 
 <body>
 <div class="container">
 
-<h1>Pre-Operative Dental & Airway Capture System</h1>
+<h1>
+  Pre-Operative Dental & Airway Capture System
+  <span style="font-size:14px; font-weight:normal; color:#555;">
+    • Patent Pending
+  </span>
+</h1>
 
 <label>
-Patient / Session ID:
-<input type="text" id="sessionId" placeholder="Auto-generated if left blank">
+  Patient / Session ID:
+  <input type="text" id="sessionId" placeholder="Auto-generated if left blank">
 </label>
 
-<!-- I1 AIRWAY -->
+<p class="status incomplete" id="captureStatus">Incomplete Capture</p>
+
+<!-- AIRWAY -->
 <div class="section">
-<h2>I1 – Airway View <span id="I1status" class="status-dot"></span></h2>
+<h2>I1 – Airway View</h2>
 <input type="file" id="airwayImage" accept="image/*">
 <img id="airwayPreview" class="preview">
 
@@ -54,7 +53,7 @@ Patient / Session ID:
 </select>
 </label>
 
-<h3>Mallampati Rationale (Observed)</h3>
+<h3>Mallampati Rationale</h3>
 <label><input type="checkbox" id="softPalate"> Soft palate visible</label>
 <label><input type="checkbox" id="uvula"> Uvula visible</label>
 <label><input type="checkbox" id="pillars"> Faucial pillars visible</label>
@@ -87,7 +86,7 @@ const dentDiv = document.getElementById("dentition");
 dentitionViews.forEach(v => {
   dentDiv.insertAdjacentHTML("beforeend", `
     <div class="section">
-      <h3>${v.id} – ${v.label} <span id="${v.id}status" class="status-dot"></span></h3>
+      <h3>${v.id} – ${v.label}</h3>
       <input type="file" id="${v.id}img" accept="image/*">
       <img id="${v.id}prev" class="preview">
 
@@ -99,97 +98,96 @@ dentitionViews.forEach(v => {
   `);
 });
 
-function bindCapture(inputId, imgId, statusId){
+function bindPreview(inputId, imgId) {
   const input = document.getElementById(inputId);
   const img = document.getElementById(imgId);
-  const dot = document.getElementById(statusId);
-
   input.addEventListener("change", () => {
-    if(input.files[0]){
+    if (input.files[0]) {
       img.src = URL.createObjectURL(input.files[0]);
-      dot.classList.add("status-complete");
-      checkCompletion();
+      validateCapture();
     }
   });
 }
 
-bindCapture("airwayImage","airwayPreview","I1status");
-dentitionViews.forEach(v =>
-  bindCapture(v.id+"img", v.id+"prev", v.id+"status")
-);
+bindPreview("airwayImage","airwayPreview");
+dentitionViews.forEach(v => bindPreview(v.id+"img", v.id+"prev"));
 
-function checkCompletion(){
-  const allComplete =
-    airwayImage.files.length &&
-    dentitionViews.every(v => document.getElementById(v.id+"img").files.length);
+function validateCapture() {
+  const required = [
+    airwayImage.files.length,
+    ...dentitionViews.map(v => document.getElementById(v.id+"img").files.length)
+  ];
+  const complete = required.every(v => v === 1);
 
-  document.getElementById("generateBtn").disabled = !allComplete;
+  document.getElementById("captureStatus").textContent =
+    complete ? "Capture Complete" : "Incomplete Capture";
+
+  document.getElementById("captureStatus").className =
+    "status " + (complete ? "complete" : "incomplete");
+
+  document.getElementById("generateBtn").disabled = !complete;
 }
 
 document.getElementById("generateBtn").onclick = generatePDF;
 
-function generatePDF(){
+async function generatePDF(){
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF();
   let y = 15;
 
-  const session = sessionId.value || "SESSION-" + Date.now();
+  const session = sessionId.value || ("SESSION-" + Date.now());
   const timestamp = new Date().toISOString();
 
   const mall = mallampati.value;
   const tongue = tongueObstruction.checked;
 
-  let airwayRisk = "LOW";
-  if (mall === "III" || mall === "IV" || tongue) airwayRisk = "MODERATE";
-  if (mall === "IV" && tongue) airwayRisk = "HIGH";
+  let risk = "LOW";
+  if (mall === "III" || mall === "IV" || tongue) risk = "MODERATE";
+  if (mall === "IV" && tongue) risk = "HIGH";
 
   pdf.setFontSize(18);
-  pdf.text("Pre-Operative Dental & Airway Report (Interpreted)",10,y); y+=10;
+  pdf.text("Pre-Operative Dental & Airway Report",10,y); y+=10;
 
   pdf.setFontSize(12);
   pdf.text(`Session ID: ${session}`,10,y); y+=6;
-  pdf.text(`Capture Timestamp (UTC): ${timestamp}`,10,y); y+=10;
+  pdf.text(`Timestamp (UTC): ${timestamp}`,10,y); y+=10;
 
-  pdf.setFontSize(14);
-  pdf.text("Airway Assessment",10,y); y+=8;
-
-  pdf.setFontSize(12);
   pdf.text(`Mallampati Class: ${mall}`,10,y); y+=6;
   pdf.text(`Tongue Obstruction: ${tongue ? "Yes":"No"}`,10,y); y+=6;
-  pdf.text(`Airway Risk (Rules-Based): ${airwayRisk}`,10,y); y+=8;
+  pdf.text(`Airway Risk Stratification: ${risk}`,10,y); y+=8;
 
-  pdf.text("Mallampati Rationale:",10,y); y+=6;
-  pdf.text(`Soft palate visible: ${softPalate.checked?"Yes":"No"}`,14,y); y+=5;
-  pdf.text(`Uvula visible: ${uvula.checked?"Yes":"No"}`,14,y); y+=5;
-  pdf.text(`Faucial pillars visible: ${pillars.checked?"Yes":"No"}`,14,y); y+=5;
-  pdf.text(`Only hard palate visible: ${hardPalate.checked?"Yes":"No"}`,14,y); y+=8;
-
-  pdf.addImage(airwayPreview,"JPEG",10,y,70,70);
-  y+=80;
+  if(airwayPreview.src){
+    pdf.addImage(airwayPreview,"JPEG",10,y,80,80);
+    y+=90;
+  }
 
   pdf.addPage();
   y=15;
-  pdf.text("Dentition Findings by Image",10,y); y+=8;
+  pdf.text("Dentition Images",10,y); y+=10;
 
   dentitionViews.forEach(v=>{
     pdf.text(`${v.id} – ${v.label}`,10,y); y+=6;
-    pdf.addImage(document.getElementById(v.id+"prev"),"JPEG",10,y,60,60);
-
-    pdf.text(`Missing teeth: ${document.getElementById(v.id+"missing").checked?"Yes":"No"}`,75,y);
-    pdf.text(`Crowns/restorations: ${document.getElementById(v.id+"crowns").checked?"Yes":"No"}`,75,y+6);
-    pdf.text(`Chips/fractures: ${document.getElementById(v.id+"chips").checked?"Yes":"No"}`,75,y+12);
-
-    if(v.occlusion){
-      pdf.text(`Occlusal instability: ${document.getElementById(v.id+"occlusion").checked?"Yes":"No"}`,75,y+18);
-    }
-
+    const img = document.getElementById(v.id+"prev");
+    if(img.src) pdf.addImage(img,"JPEG",10,y,60,60);
     y+=70;
+    if(y>250){ pdf.addPage(); y=15; }
   });
 
-  pdf.setFontSize(10);
-  pdf.text("Patent Pending",10,285);
-
+  addFooter(pdf);
   pdf.save(`PreOp_${session}.pdf`);
+}
+
+function addFooter(pdf){
+  const pages = pdf.getNumberOfPages();
+  pdf.setFontSize(10);
+  pdf.setTextColor(80);
+  for(let i=1;i<=pages;i++){
+    pdf.setPage(i);
+    pdf.text(
+      "Patent Pending • Pre-Operative Dental & Airway Capture System",
+      105,290,{align:"center"}
+    );
+  }
 }
 
 });
