@@ -3,119 +3,75 @@
 <head>
 <meta charset="UTF-8">
 <title>Pre-Operative Dental & Airway Capture System</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
 body {
-  font-family: Arial, Helvetica, sans-serif;
-  margin: 30px;
+  font-family: Arial, sans-serif;
+  background:#f4f6f8;
+  padding:20px;
 }
-h1 {
-  font-size: 34px;
-}
-h2 {
-  margin-top: 30px;
-}
-h3 {
-  margin-top: 20px;
+.container {
+  max-width:1000px;
+  margin:auto;
+  background:#fff;
+  padding:30px;
+  border-radius:10px;
 }
 .section {
-  margin-bottom: 30px;
+  border-top:1px solid #ddd;
+  margin-top:30px;
+  padding-top:20px;
 }
-label {
-  display: block;
-  margin: 6px 0;
+.preview {
+  max-width:240px;
+  display:block;
+  margin:10px 0;
+  border:1px solid #ccc;
 }
-hr {
-  margin: 30px 0;
+.status {
+  font-weight:bold;
+  margin-left:10px;
 }
+.complete { color:green; }
+.incomplete { color:red; }
+
+button {
+  padding:16px 24px;
+  font-size:18px;
+  margin-top:40px;
+  cursor:pointer;
+}
+button:disabled {
+  opacity:0.5;
+  cursor:not-allowed;
+}
+h2,h3 { margin-bottom:10px; }
 </style>
 </head>
 
 <body>
+<div class="container">
 
 <h1>Pre-Operative Dental & Airway Capture System</h1>
-<strong>Patent Pending</strong><br><br>
+<p><strong>Patent Pending</strong></p>
 
 <label>
 Patient / Session ID:
-<input type="text" placeholder="Auto-generated if left blank">
+<input type="text" id="sessionId" placeholder="Auto-generated if left blank">
 </label>
 
-<hr>
-
-<!-- I1 — AIRWAY VIEW -->
+<!-- I1 AIRWAY -->
 <div class="section">
-<h2>I1 — Airway View</h2>
+<h2>I1 – Airway View <span id="status-I1" class="status incomplete">Incomplete</span></h2>
+<input type="file" id="airwayImage" accept="image/*">
+<img id="airwayPreview" class="preview">
 
-<input type="file"><br>
+<label><input type="checkbox" id="tongueObstruction"> Tongue obstruction noted</label>
 
-<label>
-<input type="checkbox">
-Tongue obstruction noted
-</label>
-
-<label>
-Mallampati:
-<select>
+<label>Mallampati Class:
+<select id="mallampati">
 <option value="">Select</option>
 <option>I</option>
-<option>II</option>
-<option>III</option>
-<option>IV</option>
-</select>
-</label>
-
-<h3>Mallampati Rationale (Observed)</h3>
-<label><input type="checkbox"> Soft palate visible</label>
-<label><input type="checkbox"> Uvula visible</label>
-<label><input type="checkbox"> Faucial pillars visible</label>
-<label><input type="checkbox"> Only hard palate visible</label>
-</div>
-
-<hr>
-
-<!-- I2–I6 DENTITION -->
-<div class="section">
-<h2>I2–I6 Dentition Images</h2>
-
-<h3>I2 — Upper Dentition</h3>
-<input type="file"><br>
-<label><input type="checkbox"> Missing teeth</label>
-<label><input type="checkbox"> Crowns / restorations</label>
-<label><input type="checkbox"> Chips / fractures</label>
-
-<hr>
-
-<h3>I3 — Lower Dentition</h3>
-<input type="file"><br>
-<label><input type="checkbox"> Missing teeth</label>
-<label><input type="checkbox"> Crowns / restorations</label>
-<label><input type="checkbox"> Chips / fractures</label>
-
-<hr>
-
-<h3>I4 — Right Molars</h3>
-<input type="file"><br>
-<label><input type="checkbox"> Missing teeth</label>
-<label><input type="checkbox"> Crowns / restorations</label>
-<label><input type="checkbox"> Chips / fractures</label>
-
-<hr>
-
-<h3>I5 — Left Molars</h3>
-<input type="file"><br>
-<label><input type="checkbox"> Missing teeth</label>
-<label><input type="checkbox"> Crowns / restorations</label>
-<label><input type="checkbox"> Chips / fractures</label>
-
-<hr>
-
-<h3>I6 — Natural Occlusion</h3>
-<input type="file"><br>
-<label><input type="checkbox"> Missing teeth</label>
-<label><input type="checkbox"> Crowns / restorations</label>
-<label><input type="checkbox"> Chips / fractures</label>
-</div>
-
-</body>
-</html>
