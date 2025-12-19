@@ -38,16 +38,16 @@ button { padding:12px 22px; font-size:18px; margin-top:20px; }
 <div class="section">
 <h2>I1 — Airway View <span id="i1Status" class="incomplete">Incomplete</span></h2>
 
-<input type="file" accept="image/*" onchange="loadImage(this,'airwayImg','i1Status')">
-<img id="airwayImg" class="preview">
+<input type="file" accept="image/*" onchange="loadImage(this,'airway')">
+<img id="airway_preview" class="preview">
 
 <label>Mallampati</label>
 <select id="mallampati">
 <option value="">Select</option>
-<option value="I">I</option>
-<option value="II">II</option>
-<option value="III">III</option>
-<option value="IV">IV</option>
+<option>I</option>
+<option>II</option>
+<option>III</option>
+<option>IV</option>
 </select>
 
 <label><input type="checkbox" id="tongueObs"> Tongue obstruction noted</label>
@@ -64,11 +64,11 @@ button { padding:12px 22px; font-size:18px; margin-top:20px; }
 <div id="dentition"></div>
 </div>
 
-<div class="section" id="clinicalBox">
+<div class="section">
 <h2>Clinical Interpretation</h2>
 
 <label>Airway Risk</label>
-<input type="text" id="airwayRisk" class="readonly" readonly>
+<input id="airwayRisk" class="readonly" readonly>
 
 <label>Risk Description</label>
 <textarea id="riskDescription" class="readonly" readonly></textarea>
@@ -80,15 +80,15 @@ button { padding:12px 22px; font-size:18px; margin-top:20px; }
 <textarea id="observedFindings" class="readonly" readonly></textarea>
 </div>
 
-<div class="section" id="signatureBox">
+<div class="section">
 <h2>Reviewer</h2>
 
 <label>Reviewed By</label>
-<input type="text" id="reviewerName">
+<input id="reviewerName">
 
 <label>Role</label>
 <select id="reviewerRole">
-<option value="">Select</option>
+<option>Select</option>
 <option>CRNA</option>
 <option>MD</option>
 <option>DO</option>
@@ -103,24 +103,25 @@ button { padding:12px 22px; font-size:18px; margin-top:20px; }
 <button onclick="generatePDF()">Generate PDF Report</button>
 
 <script>
-const images = {};
+const imageStore = {};
 
-function loadImage(input, imgId, statusId){
+function loadImage(input, key){
   const file = input.files[0];
   if(!file) return;
   const reader = new FileReader();
   reader.onload = e => {
-    document.getElementById(imgId).src = e.target.result;
-    images[imgId] = e.target.result;
-    if(statusId){
-      document.getElementById(statusId).textContent = "Complete";
-      document.getElementById(statusId).className = "complete";
+    imageStore[key] = e.target.result;
+    const img = document.getElementById(key+"_preview");
+    if(img) img.src = e.target.result;
+    if(key==="airway"){
+      i1Status.textContent="Complete";
+      i1Status.className="complete";
     }
   };
   reader.readAsDataURL(file);
 }
 
-const dentitionData = [
+const dentitionKeys = [
 ["i2","Upper Dentition"],
 ["i3","Lower Dentition"],
 ["i4","Right Molars"],
@@ -128,28 +129,21 @@ const dentitionData = [
 ["i6","Natural Occlusion"]
 ];
 
-dentitionData.forEach(d=>{
+dentitionKeys.forEach(d=>{
   const div=document.createElement("div");
   div.className="section";
   div.innerHTML=`
     <h3>${d[0].toUpperCase()} — ${d[1]}</h3>
-    <input type="file" accept="image/*" onchange="loadImage(this,'${d[0]}Img')">
-    <img id="${d[0]}Img" class="preview">
+    <input type="file" accept="image/*" onchange="loadImage(this,'${d[0]}')">
+    <img id="${d[0]}_preview" class="preview">
   `;
-  document.getElementById("dentition").appendChild(div);
+  dentition.appendChild(div);
 });
 
 function updateClinical(){
   if(!mallampati.value) return;
 
-  const findings=[];
-  if(soft.checked) findings.push("Soft palate visible");
-  if(uvula.checked) findings.push("Uvula visible");
-  if(pillars.checked) findings.push("Faucial pillars visible");
-  if(hard.checked) findings.push("Only hard palate visible");
-
   const high = mallampati.value==="III" || mallampati.value==="IV" || tongueObs.checked;
-
   airwayRisk.value = high ? "HIGH" : "LOW";
 
   riskDescription.value = high
@@ -160,40 +154,54 @@ function updateClinical(){
     `Mallampati ${mallampati.value}` +
     (tongueObs.checked ? " with tongue obstruction noted." : ".");
 
+  const findings=[];
+  if(soft.checked) findings.push("Soft palate visible");
+  if(uvula.checked) findings.push("Uvula visible");
+  if(pillars.checked) findings.push("Faucial pillars visible");
+  if(hard.checked) findings.push("Only hard palate visible");
+
   observedFindings.value = findings.join("; ");
 }
 
 document.querySelectorAll("input,select").forEach(e=>e.addEventListener("change",updateClinical));
 
 async function generatePDF(){
-  const session = sessionId.value || "Patient Pending";
-  const now = new Date().toLocaleString("en-US",{timeZone:"America/Chicago"});
+  const wrap=document.createElement("div");
+  wrap.style.padding="30px";
+  wrap.style.background="white";
 
-  const clone = document.body.cloneNode(true);
-
-  const header = document.createElement("div");
-  header.innerHTML = `
+  const now=new Date().toLocaleString("en-US",{timeZone:"America/Chicago"});
+  wrap.innerHTML=`
     <h1>Pre-Operative Dental & Airway Report</h1>
-    <strong>Session ID:</strong> ${session}<br>
+    <strong>Session ID:</strong> ${sessionId.value}<br>
     <strong>Capture Timestamp (CST):</strong> ${now}<br><br>
+
+    <strong>Airway Risk:</strong> ${airwayRisk.value}<br><br>
+    <strong>Risk Description:</strong><br>${riskDescription.value}<br><br>
+    <strong>Interpretation:</strong><br>${interpretation.value}<br><br>
+    <strong>Observed Findings:</strong><br>${observedFindings.value}<br><br>
   `;
-  clone.prepend(header);
 
-  const container = document.createElement("div");
-  container.style.background="white";
-  container.style.padding="30px";
-  container.appendChild(clone);
+  Object.entries(imageStore).forEach(([k,src])=>{
+    const h=document.createElement("h3");
+    h.textContent=k.toUpperCase();
+    const img=document.createElement("img");
+    img.src=src;
+    img.style.maxWidth="100%";
+    img.style.marginBottom="20px";
+    wrap.appendChild(h);
+    wrap.appendChild(img);
+  });
 
-  document.body.appendChild(container);
-
-  await new Promise(r=>setTimeout(r,500));
+  document.body.appendChild(wrap);
+  await new Promise(r=>setTimeout(r,300));
 
   html2pdf().set({
     margin:10,
-    filename:`PreOp_${session}.pdf`,
-    html2canvas:{scale:2,useCORS:true},
+    filename:`PreOp_${sessionId.value}.pdf`,
+    html2canvas:{scale:2},
     jsPDF:{unit:"mm",format:"a4"}
-  }).from(container).save().then(()=>container.remove());
+  }).from(wrap).save().then(()=>wrap.remove());
 }
 </script>
 
