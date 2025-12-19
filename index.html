@@ -15,12 +15,16 @@ body { font-family: Arial, sans-serif; background:#f4f6f8; padding:20px; }
 .complete { color:green; font-weight:bold; margin-left:10px; }
 button { padding:16px 24px; font-size:18px; margin-top:40px; }
 button:disabled { opacity:0.4; }
+.subtitle { font-weight:bold; margin-top:5px; }
 </style>
 </head>
 
 <body>
 <div class="container">
+
 <h1>Pre-Operative Dental & Airway Capture System</h1>
+<div class="subtitle">Patent Pending</div>
+
 <p><strong>Patient / Session ID:</strong>
 <input id="sessionId" placeholder="Auto-generated if left blank">
 </p>
@@ -32,16 +36,23 @@ button:disabled { opacity:0.4; }
 <img id="prev-I1" class="preview">
 
 <label><input type="checkbox" id="tongue"> Tongue obstruction noted</label>
-<label>Mallampati:
+
+<label>Mallampati Class:
 <select id="mall">
 <option value="">Select</option>
 <option>I</option><option>II</option><option>III</option><option>IV</option>
-</select></label>
+</select>
+</label>
+
+<h3>Mallampati Rationale (Observed)</h3>
+<label><input type="checkbox" id="softPalate"> Soft palate visible</label><br>
+<label><input type="checkbox" id="uvula"> Uvula visible</label><br>
+<label><input type="checkbox" id="pillars"> Faucial pillars visible</label><br>
+<label><input type="checkbox" id="hardPalate"> Only hard palate visible</label>
 </div>
 
 <!-- DENTITION -->
 <div class="section"><h2>Dentition Images</h2></div>
-
 <div id="dentition"></div>
 
 <button id="generate" disabled>Generate PDF Report</button>
@@ -72,18 +83,18 @@ const allIds = ["I1", ...views.map(v=>v.id)];
 const imgData = {};
 
 function toBase64(file){
- return new Promise((res)=>{
-  const reader = new FileReader();
-  reader.onload = ()=>res(reader.result);
-  reader.readAsDataURL(file);
+ return new Promise(res=>{
+  const r = new FileReader();
+  r.onload = ()=>res(r.result);
+  r.readAsDataURL(file);
  });
 }
 
 allIds.forEach(id=>{
  document.getElementById(id).addEventListener("change", async e=>{
-  const file = e.target.files[0];
-  if(!file) return;
-  imgData[id] = await toBase64(file);
+  const f = e.target.files[0];
+  if(!f) return;
+  imgData[id] = await toBase64(f);
   document.getElementById("prev-"+id).src = imgData[id];
   document.getElementById("status-"+id).textContent = "Complete";
   document.getElementById("status-"+id).className = "complete";
@@ -96,7 +107,7 @@ function validate(){
   allIds.some(id=>!imgData[id]);
 }
 
-document.getElementById("generate").onclick = async ()=>{
+document.getElementById("generate").onclick = ()=>{
  const { jsPDF } = window.jspdf;
  const pdf = new jsPDF();
  let y = 20;
@@ -117,10 +128,15 @@ document.getElementById("generate").onclick = async ()=>{
  pdf.text(`Capture Timestamp (CST): ${ts}`,10,y); y+=10;
 
  pdf.text(`Mallampati Class: ${mall.value || "Not selected"}`,10,y); y+=6;
- pdf.text(`Tongue Obstruction: ${tongue.checked?"Yes":"No"}`,10,y); y+=10;
+ pdf.text(`Tongue Obstruction: ${tongue.checked?"Yes":"No"}`,10,y); y+=8;
+
+ pdf.text("Mallampati Rationale:",10,y); y+=6;
+ pdf.text(`Soft palate visible: ${softPalate.checked?"Yes":"No"}`,14,y); y+=5;
+ pdf.text(`Uvula visible: ${uvula.checked?"Yes":"No"}`,14,y); y+=5;
+ pdf.text(`Faucial pillars visible: ${pillars.checked?"Yes":"No"}`,14,y); y+=5;
+ pdf.text(`Only hard palate visible: ${hardPalate.checked?"Yes":"No"}`,14,y); y+=8;
 
  pdf.addImage(imgData["I1"],"JPEG",10,y,80,60);
- y+=70;
 
  for(const v of views){
   pdf.addPage();
@@ -129,10 +145,7 @@ document.getElementById("generate").onclick = async ()=>{
  }
 
  pdf.setFontSize(10);
- pdf.text(
-  "Patent Pending · Non-diagnostic clinical documentation tool",
-  10, 290
- );
+ pdf.text("Patent Pending · Non-diagnostic clinical documentation tool",10,290);
 
  pdf.save(`PreOp_${sid}.pdf`);
 };
