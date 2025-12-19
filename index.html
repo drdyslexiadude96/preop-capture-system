@@ -107,6 +107,7 @@ Role:
 
 <script>
 const files = ["i2","i3","i4","i5","i6"];
+
 files.forEach((id,i)=>{
 document.getElementById(id).addEventListener("change",()=>{
 document.getElementById("s"+(i+2)).textContent="Complete";
@@ -121,27 +122,40 @@ document.getElementById("pdfBtn").disabled = !all;
 }
 
 function cstTime(){
-return new Date().toLocaleString("en-US",{timeZone:"America/Chicago",hour12:true});
+return new Date().toLocaleString("en-US",{
+timeZone:"America/Chicago",
+hour:"2-digit",
+minute:"2-digit",
+month:"short",
+day:"2-digit",
+year:"numeric"
+});
 }
 
-document.getElementById("mallampati").addEventListener("change",()=>{
-let m = mallampati.value;
-let t = tongueObs.checked;
-if(!m) return;
-let risk = (m==="III"||m==="IV"||t)?"HIGH":"MODERATE";
-document.getElementById("riskText").innerHTML =
+function updateRisk(){
+const m = mallampati.value;
+const t = tongueObs.checked;
+if(!m){
+riskText.innerHTML = "<em>Complete airway inputs to generate interpretation.</em>";
+return;
+}
+const risk = (m==="III"||m==="IV"||t) ? "HIGH" : "MODERATE";
+riskText.innerHTML =
 "<strong>Airway Risk:</strong> "+risk+
-"<br><strong>Interpretation:</strong> "+
-(m==="II"?"Mallampati II":"Mallampati "+m)+
-(t?" with tongue obstruction noted.":".");
-});
+"<br><strong>Clinical Interpretation:</strong> Mallampati "+m+
+(t ? " with tongue obstruction noted." : ".");
+}
 
-document.getElementById("pdfBtn").onclick = ()=>{
+mallampati.addEventListener("change", updateRisk);
+tongueObs.addEventListener("change", updateRisk);
+
+pdfBtn.onclick = ()=>{
 const sid = sessionId.value || "SESSION-"+Date.now();
 const pdf = document.createElement("div");
 
 pdf.innerHTML = `
 <h1>Pre-Operative Dental & Airway Report</h1>
+
 <p><strong>Session ID:</strong> ${sid}</p>
 <p><strong>Capture Timestamp (CST):</strong> ${cstTime()}</p>
 
@@ -155,7 +169,7 @@ Faucial pillars visible: ${pillars.checked?"Yes":"No"}<br>
 Only hard palate visible: ${hard.checked?"Yes":"No"}
 </p>
 
-<p>${document.getElementById("riskText").innerText}</p>
+<p>${riskText.innerText}</p>
 
 <p><strong>Reviewed by:</strong> ${reviewer.value || "—"}</p>
 <p><strong>Role:</strong> ${role.value || "—"}</p>
