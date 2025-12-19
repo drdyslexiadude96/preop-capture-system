@@ -15,7 +15,7 @@ body { font-family: Arial, sans-serif; background:#f4f6f8; padding:20px; }
 label { display:block; margin:6px 0; }
 button { padding:16px 24px; font-size:18px; margin-top:40px; cursor:pointer; }
 h2,h3 { margin-bottom:10px; }
-input[type="text"] { padding:6px; font-size:14px; width:260px; }
+input[type="text"] { padding:6px; font-size:14px; }
 </style>
 </head>
 
@@ -25,7 +25,7 @@ input[type="text"] { padding:6px; font-size:14px; width:260px; }
 
 <label>
 Patient / Session ID:
-<input type="text" id="sessionID" placeholder="Auto-generated if left blank">
+<input type="text" id="sessionId" placeholder="Auto-generated if left blank">
 </label>
 
 <!-- I1 AIRWAY -->
@@ -98,39 +98,36 @@ function bindPreview(inputId, imgId) {
 bindPreview("airwayImage","airwayPreview");
 dentitionViews.forEach(v => bindPreview(v.id+"img", v.id+"prev"));
 
-function generateSessionID() {
-  return "SID-" + Date.now() + "-" + Math.random().toString(36).substring(2,8).toUpperCase();
-}
-
 document.getElementById("generateBtn").onclick = generatePDF;
 
 async function generatePDF(){
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF();
+
+  const timestamp = new Date();
+  const ts = timestamp.toISOString();
+
+  const sessionInput = document.getElementById("sessionId").value.trim();
+  const sessionId = sessionInput || "SID-" + Date.now();
+
+  const captureSequenceId = `CAP-${ts.replace(/[-:T.Z]/g,"").slice(0,14)}-I1-I6`;
+
   let y = 15;
-
-  let sessionInput = document.getElementById("sessionID");
-  let sessionID = sessionInput.value.trim();
-  if (!sessionID) {
-    sessionID = generateSessionID();
-    sessionInput.value = sessionID;
-  }
-
-  const timestamp = new Date().toISOString();
 
   const mall = mallampati.value;
   const tongue = tongueObstruction.checked;
 
-  let airwayRisk = "LOW";
-  if (mall === "III" || mall === "IV" || tongue) airwayRisk = "MODERATE";
-  if (mall === "IV" && tongue) airwayRisk = "HIGH";
+  let risk = "LOW";
+  if (mall === "III" || mall === "IV" || tongue) risk = "MODERATE";
+  if (mall === "IV" && tongue) risk = "HIGH";
 
   pdf.setFontSize(18);
-  pdf.text("Pre-Operative Dental & Airway Report",10,y); y+=10;
+  pdf.text("Pre-Operative Dental & Airway Report",10,y); y+=8;
 
   pdf.setFontSize(10);
-  pdf.text(`Patient / Session ID: ${sessionID}`,10,y); y+=5;
-  pdf.text(`Capture Timestamp (UTC): ${timestamp}`,10,y); y+=8;
+  pdf.text(`Session ID: ${sessionId}`,10,y); y+=5;
+  pdf.text(`Capture Sequence ID: ${captureSequenceId}`,10,y); y+=5;
+  pdf.text(`Timestamp (UTC): ${ts}`,10,y); y+=8;
 
   pdf.setFontSize(14);
   pdf.text("Airway Assessment",10,y); y+=8;
@@ -138,7 +135,7 @@ async function generatePDF(){
   pdf.setFontSize(12);
   pdf.text(`Mallampati Class: ${mall || "Not selected"}`,10,y); y+=6;
   pdf.text(`Tongue Obstruction: ${tongue ? "Yes":"No"}`,10,y); y+=6;
-  pdf.text(`Airway Risk Stratification (Rules-Based): ${airwayRisk}`,10,y); y+=8;
+  pdf.text(`Airway Risk Stratification (Rules-Based): ${risk}`,10,y); y+=8;
 
   pdf.text("Mallampati Rationale:",10,y); y+=6;
   pdf.text(`Soft palate visible: ${softPalate.checked?"Yes":"No"}`,14,y); y+=5;
@@ -148,25 +145,28 @@ async function generatePDF(){
 
   if(airwayPreview.src){
     pdf.addImage(airwayPreview,"JPEG",10,y,70,70);
+    y+=80;
   }
 
-  pdf.setFontSize(8);
-  pdf.text("Patent Pending",10,292);
+  pdf.setFontSize(13);
+  pdf.text("Clinical Considerations (Non-Diagnostic)",10,y); y+=7;
+
+  pdf.setFontSize(11);
+  pdf.text("• Findings may indicate potential airway visualization limitations during laryngoscopy.",12,y); y+=6;
+  pdf.text("• Dentition findings may increase risk of dental injury during airway instrumentation.",12,y); y+=6;
+  pdf.text("• This report is intended to support pre-operative planning and does not replace clinical judgment.",12,y); y+=10;
 
   pdf.addPage();
   y=15;
-
   pdf.setFontSize(14);
-  pdf.text("Dentition Findings by Image",10,y); y+=8;
+  pdf.text("Dentition Findings (Locked Image Order I2–I6)",10,y); y+=8;
 
   dentitionViews.forEach(v=>{
     pdf.setFontSize(12);
     pdf.text(`${v.id} – ${v.label}`,10,y); y+=6;
 
     const img = document.getElementById(v.id+"prev");
-    if(img.src){
-      pdf.addImage(img,"JPEG",10,y,60,60);
-    }
+    if(img.src) pdf.addImage(img,"JPEG",10,y,60,60);
 
     pdf.text(`Missing teeth: ${document.getElementById(v.id+"missing").checked?"Yes":"No"}`,75,y);
     pdf.text(`Crowns/restorations: ${document.getElementById(v.id+"crowns").checked?"Yes":"No"}`,75,y+6);
@@ -177,18 +177,17 @@ async function generatePDF(){
     }
 
     y+=70;
-    if(y>250){
-      pdf.setFontSize(8);
-      pdf.text("Patent Pending",10,292);
-      pdf.addPage();
-      y=15;
-    }
+    if(y>260){ pdf.addPage(); y=15; }
   });
 
-  pdf.setFontSize(8);
-  pdf.text("Patent Pending",10,292);
+  const pageCount = pdf.getNumberOfPages();
+  for(let i=1;i<=pageCount;i++){
+    pdf.setPage(i);
+    pdf.setFontSize(9);
+    pdf.text("Patent Pending",10,290);
+  }
 
-  pdf.save(`PreOp_Dental_Airway_Report_${sessionID}.pdf`);
+  pdf.save("PreOp_Dental_Airway_Report.pdf");
 }
 
 });
