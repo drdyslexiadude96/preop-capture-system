@@ -7,16 +7,17 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <style>
-body { font-family: Arial, Helvetica, sans-serif; margin:30px }
-h1 { font-size:34px }
-h2 { margin-top:30px }
-.section { border-bottom:1px solid #ccc; padding-bottom:20px; margin-bottom:25px }
-label { display:block; margin-top:6px }
-.complete { color:green; font-weight:bold }
-.incomplete { color:red; font-weight:bold }
-img.preview { max-width:260px; margin-top:10px; display:block }
-button { padding:10px 18px; font-size:16px; margin-top:15px }
-.hidden { display:none }
+body { font-family: Arial, Helvetica, sans-serif; margin:30px; }
+h1 { font-size:34px; }
+h2 { margin-top:30px; }
+.section { margin-bottom:30px; border-bottom:1px solid #ccc; padding-bottom:20px; }
+.complete { color:green; font-weight:bold; }
+.incomplete { color:red; font-weight:bold; }
+img.preview { max-width:250px; display:block; margin-top:10px; border:1px solid #ccc; }
+label { display:block; margin:6px 0; }
+button { padding:10px 18px; font-size:16px; margin-top:20px; }
+input[type=text], select { padding:6px; width:260px; }
+textarea { width:100%; min-height:60px; padding:6px; }
 </style>
 </head>
 
@@ -25,180 +26,186 @@ button { padding:10px 18px; font-size:16px; margin-top:15px }
 <h1>Pre-Operative Dental & Airway Capture System</h1>
 <strong>Patent Pending</strong><br><br>
 
-<strong>Patient / Session ID:</strong>
-<input id="sessionId" placeholder="Patient Pending"><br>
+<label>
+Patient / Session ID:
+<input type="text" id="sessionId" value="Patient Pending">
+</label>
 
-<!-- AIRWAY -->
+<!-- ================= AIRWAY ================= -->
 <div class="section">
-<h2>I1 — Airway View <span id="airwayStatus" class="incomplete">Incomplete</span></h2>
+<h2>I1 — Airway View <span id="i1Status" class="incomplete">Incomplete</span></h2>
 
-<label>Mallampati Class:
+<input type="file" accept="image/*" onchange="loadImage(this,'airwayImg','i1Status')">
+<img id="airwayImg" class="preview">
+
+<label>Mallampati:
 <select id="mallampati">
 <option value="">Select</option>
-<option>I</option><option>II</option><option>III</option><option>IV</option>
+<option value="I">I</option>
+<option value="II">II</option>
+<option value="III">III</option>
+<option value="IV">IV</option>
 </select>
 </label>
 
-<label><input type="checkbox" id="tongue"> Tongue obstruction noted</label>
+<label><input type="checkbox" id="tongueObs"> Tongue obstruction noted</label>
 
-<label><input type="checkbox" class="obs" value="Soft palate visible"> Soft palate visible</label>
-<label><input type="checkbox" class="obs" value="Uvula visible"> Uvula visible</label>
-<label><input type="checkbox" class="obs" value="Faucial pillars visible"> Faucial pillars visible</label>
-<label><input type="checkbox" class="obs" value="Only hard palate visible"> Only hard palate visible</label>
-
-<label>Airway Image:
-<input type="file" accept="image/*" onchange="preview(this,'airwayImg')">
-</label>
-<img id="airwayImg" class="preview">
+<strong>Mallampati Rationale (Observed)</strong>
+<label><input type="checkbox" id="soft"> Soft palate visible</label>
+<label><input type="checkbox" id="uvula"> Uvula visible</label>
+<label><input type="checkbox" id="pillars"> Faucial pillars visible</label>
+<label><input type="checkbox" id="hard"> Only hard palate visible</label>
 </div>
 
-<!-- DENTITION -->
+<!-- ================= DENTITION ================= -->
 <div class="section">
 <h2>Dentition Images</h2>
-
-<div>
-<strong>I2 — Upper Dentition</strong><br>
-<input type="file" accept="image/*" onchange="preview(this,'i2')">
-<img id="i2" class="preview">
+<div id="dentition"></div>
 </div>
 
-<div>
-<strong>I3 — Lower Dentition</strong><br>
-<input type="file" accept="image/*" onchange="preview(this,'i3')">
-<img id="i3" class="preview">
-</div>
-
-<div>
-<strong>I4 — Right Molars</strong><br>
-<input type="file" accept="image/*" onchange="preview(this,'i4')">
-<img id="i4" class="preview">
-</div>
-
-<div>
-<strong>I5 — Left Molars</strong><br>
-<input type="file" accept="image/*" onchange="preview(this,'i5')">
-<img id="i5" class="preview">
-</div>
-
-<div>
-<strong>I6 — Natural Occlusion</strong><br>
-<input type="file" accept="image/*" onchange="preview(this,'i6')">
-<img id="i6" class="preview">
-</div>
-</div>
-
-<!-- CLINICAL -->
-<div class="section">
+<!-- ================= CLINICAL ================= -->
+<div class="section" id="clinicalBox">
 <h2>Clinical Interpretation</h2>
 
-<strong>Airway Risk:</strong> <span id="risk"></span><br>
-<strong>Risk Description:</strong> <span id="riskDesc"></span><br>
-<strong>Interpretation:</strong> <span id="interp"></span><br>
-<strong>Observed Findings:</strong>
-<ul id="findings"></ul>
+<label>Airway Risk:</label>
+<input type="text" id="airwayRisk" readonly>
+
+<label>Risk Description:</label>
+<textarea id="riskDescription"></textarea>
+
+<label>Interpretation:</label>
+<textarea id="interpretation"></textarea>
+
+<label>Observed Findings:</label>
+<textarea id="observedFindings"></textarea>
 </div>
 
-<!-- REVIEWER -->
-<div class="section">
+<!-- ================= REVIEWER ================= -->
+<div class="section" id="signatureBox">
 <h2>Reviewer</h2>
 
-<label>Reviewed By:
-<input id="reviewer" placeholder="Name">
+<label>
+Reviewed By:
+<input type="text" id="reviewerName" placeholder="Name">
 </label>
 
-<label>Role:
-<select id="role">
+<label>
+Role:
+<select id="reviewerRole">
 <option value="">Select</option>
 <option>CRNA</option>
-<option>Anesthesiologist</option>
 <option>MD</option>
 <option>DO</option>
+<option>DDS</option>
+<option>RN</option>
+<option>Resident</option>
+<option>Other</option>
 </select>
 </label>
 
-<label><input type="checkbox" id="prior"> Reviewed prior to induction</label>
+<label>
+<input type="checkbox" id="reviewed"> Reviewed prior to induction
+</label>
 </div>
 
 <button onclick="generatePDF()">Generate PDF Report</button>
 
-<!-- PDF CONTENT -->
-<div id="pdf" class="hidden">
-<h1>Pre-Operative Dental & Airway Report</h1>
-<strong>Patent Pending • Clinical documentation support tool</strong><br><br>
-
-<strong>Session ID:</strong> <span id="p_session"></span><br>
-<strong>Capture Timestamp (CST):</strong> <span id="p_time"></span><br><br>
-
-<h2>Airway Assessment</h2>
-Mallampati: <span id="p_mall"></span><br>
-Tongue Obstruction: <span id="p_tongue"></span><br>
-Airway Risk: <span id="p_risk"></span><br>
-Risk Description: <span id="p_desc"></span><br>
-
-<h3>Observed Findings</h3>
-<ul id="p_findings"></ul>
-
-<img id="p_airway" class="preview">
-
-<h2>Dentition Images</h2>
-<img id="p_i2" class="preview">
-<img id="p_i3" class="preview">
-<img id="p_i4" class="preview">
-<img id="p_i5" class="preview">
-<img id="p_i6" class="preview">
-
-<h2>Reviewer</h2>
-Name: <span id="p_rev"></span><br>
-Role: <span id="p_role"></span><br>
-</div>
-
 <script>
-function preview(input,id){
- if(input.files[0]){
-  const r=new FileReader();
-  r.onload=e=>document.getElementById(id).src=e.target.result;
-  r.readAsDataURL(input.files[0]);
- }
+const images = {};
+
+function loadImage(input, imgId, statusId) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById(imgId).src = e.target.result;
+    images[imgId] = e.target.result;
+    if (statusId) {
+      document.getElementById(statusId).textContent = "Complete";
+      document.getElementById(statusId).className = "complete";
+    }
+  };
+  reader.readAsDataURL(file);
 }
 
+const dentitionData = [
+  ["i2","Upper Dentition"],
+  ["i3","Lower Dentition"],
+  ["i4","Right Molars"],
+  ["i5","Left Molars"],
+  ["i6","Natural Occlusion"]
+];
+
+dentitionData.forEach(d=>{
+  const div=document.createElement("div");
+  div.className="section";
+  div.innerHTML=`
+  <h3>${d[0].toUpperCase()} — ${d[1]} <span id="${d[0]}Status" class="incomplete">Incomplete</span></h3>
+  <input type="file" accept="image/*" onchange="loadImage(this,'${d[0]}Img','${d[0]}Status')">
+  <img id="${d[0]}Img" class="preview">
+  <label><input type="checkbox"> Missing teeth</label>
+  <label><input type="checkbox"> Crowns / restorations</label>
+  <label><input type="checkbox"> Chips / fractures</label>
+  `;
+  document.getElementById("dentition").appendChild(div);
+});
+
+function updateClinical(){
+  const m = mallampati.value;
+  if(!m) return;
+
+  let risk = "LOW";
+  if(m==="III" || m==="IV" || tongueObs.checked) risk="HIGH";
+
+  airwayRisk.value = risk;
+
+  interpretation.value =
+    `Mallampati ${m}` +
+    (tongueObs.checked ? " with tongue obstruction noted." : ".");
+
+  let findings=[];
+  if(soft.checked) findings.push("Soft palate visible");
+  if(uvula.checked) findings.push("Uvula visible");
+  if(pillars.checked) findings.push("Faucial pillars visible");
+  if(hard.checked) findings.push("Only hard palate visible");
+
+  observedFindings.value = findings.join("; ");
+}
+
+document.querySelectorAll("input,select,textarea")
+  .forEach(e=>e.addEventListener("change",updateClinical));
+
 function generatePDF(){
- const m=document.getElementById("mallampati").value;
- const t=document.getElementById("tongue").checked;
+  const now = new Date().toLocaleString("en-US",{timeZone:"America/Chicago"});
+  const session = sessionId.value || "Patient Pending";
 
- let risk="LOW", desc="Minimal airway concern";
- if(m==="II"||t){ risk="MODERATE"; desc="Mallampati II with tongue obstruction noted." }
- if(m==="III"||m==="IV"){ risk="HIGH"; desc="Difficult airway anticipated." }
+  const pdf = document.createElement("div");
+  pdf.style.padding="20px";
+  pdf.innerHTML = `
+    <h1>Pre-Operative Dental & Airway Report</h1>
+    <strong>Session ID:</strong> ${session}<br>
+    <strong>Capture Timestamp (CST):</strong> ${now}<br><br>
+    ${clinicalBox.innerHTML}
+    ${signatureBox.innerHTML}
+  `;
 
- document.getElementById("risk").innerText=risk;
- document.getElementById("riskDesc").innerText=desc;
- document.getElementById("interp").innerText=desc;
+  Object.values(images).forEach(src=>{
+    const img=document.createElement("img");
+    img.src=src;
+    img.style.maxWidth="250px";
+    img.style.display="block";
+    img.style.marginBottom="10px";
+    pdf.appendChild(img);
+  });
 
- document.getElementById("p_session").innerText=document.getElementById("sessionId").value||"Patient Pending";
- document.getElementById("p_time").innerText=new Date().toLocaleString("en-US",{timeZone:"America/Chicago"});
- document.getElementById("p_mall").innerText=m;
- document.getElementById("p_tongue").innerText=t?"Yes":"No";
- document.getElementById("p_risk").innerText=risk;
- document.getElementById("p_desc").innerText=desc;
+  document.body.appendChild(pdf);
 
- document.querySelectorAll(".obs:checked").forEach(o=>{
-  let li=document.createElement("li"); li.innerText=o.value;
-  document.getElementById("findings").appendChild(li.cloneNode(true));
-  document.getElementById("p_findings").appendChild(li);
- });
-
- ["airway","i2","i3","i4","i5","i6"].forEach(id=>{
-  const src=document.getElementById(id)?.src;
-  if(src) document.getElementById("p_"+id).src=src;
- });
-
- document.getElementById("p_rev").innerText=document.getElementById("reviewer").value;
- document.getElementById("p_role").innerText=document.getElementById("role").value;
-
- document.getElementById("pdf").classList.remove("hidden");
-
- html2pdf().from(document.getElementById("pdf"))
- .set({ margin:10, filename:"PreOp_Report.pdf", html2canvas:{scale:2}, jsPDF:{unit:"mm",format:"a4"} })
- .save();
+  html2pdf().set({
+    margin:10,
+    filename:`PreOp_${session}.pdf`,
+    html2canvas:{scale:2,useCORS:true},
+    jsPDF:{unit:"mm",format:"a4"}
+  }).from(pdf).save().then(()=>pdf.remove());
 }
 </script>
 
